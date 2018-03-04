@@ -1,0 +1,86 @@
+;
+; VirtualHID.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=HIDClass
+ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
+Provider=%ManufacturerName%
+CatalogFile=VirtualHID.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+VirtualHID_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+VirtualHID.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%VirtualHID.DeviceDesc%=VirtualHID_Device, Root\VirtualHID ; TODO: edit hw-id
+
+[VirtualHID_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+VirtualHID.sys
+
+;-------------- Service installation
+[VirtualHID_Device.NT.Services]
+AddService = VirtualHID,%SPSVCINST_ASSOCSERVICE%, VirtualHID_Service_Inst
+
+; -------------- VirtualHID driver install sections
+[VirtualHID_Service_Inst]
+DisplayName    = %VirtualHID.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\VirtualHID.sys
+
+;
+;--- VirtualHID_Device Coinstaller installation ------
+;
+
+[VirtualHID_Device.NT.CoInstallers]
+AddReg=VirtualHID_Device_CoInstaller_AddReg
+CopyFiles=VirtualHID_Device_CoInstaller_CopyFiles
+
+[VirtualHID_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[VirtualHID_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[VirtualHID_Device.NT.Wdf]
+KmdfService =  VirtualHID, VirtualHID_wdfsect
+[VirtualHID_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="telesimke@gmail.com" 
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "VirtualHID Installation Disk"
+VirtualHID.DeviceDesc = "VirtualHID Device"
+VirtualHID.SVCDESC = "VirtualHID Service"
