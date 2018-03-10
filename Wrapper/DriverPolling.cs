@@ -3,33 +3,29 @@ using System.Timers;
 
 namespace VHClibWrapper
 {
-    internal class DriverPolling : IDisposable
+    public class DriverPolling : IDisposable
     {
+        private byte[] buffer;
+        private MethodChains[] chains;
+
         private bool fileOpened;
         private Timer pollTimer;
         private bool disposed = false;
-        private static byte[] buffer;
-        private static int bufferSize;
+
+        private const int BUFFER_SIZE = 256;
         private const uint STATUS_PIPE_EMPTY = 0xC00000D9;
         private const uint STATUS_SUCCESS = 1;
+        private const uint STATUS_CANCELLED = 0xC0000120;
+        private const uint STATUS_BUFFER_TOO_SMALL = 0xC0000023;
 
         private delegate uint DriverReadDelegate(byte[] buffer, int bufferSize, ref uint returnSize);
 
         private delegate uint DriverWriteDelegate(byte[] buffer, int bytesToWrite);
 
-        public event EventHandler<HidEventArg> SetFeature;
+        public event EventHandler<HidEventArg> HidEvent;
 
-        public event EventHandler<HidEventArg> GetFeature;
 
-        public event EventHandler<HidEventArg> WriteReport;
-
-        public event EventHandler<HidEventArg> GetInputReport;
-
-        public event EventHandler<HidEventArg> SetOutputReport;
-
-        private static Tuple<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>[] pollingMemebers;
-
-        public DriverPolling(int pollingInterval, int buffSize)
+        public DriverPolling()
         {
             fileOpened = NativeMethods.OpenFile();
             if (!fileOpened)
@@ -37,11 +33,18 @@ namespace VHClibWrapper
                 throw new Exception("File failed to open");
             }
 
-            bufferSize = buffSize;
-            buffer = new byte[bufferSize];
+            buffer = new byte[BUFFER_SIZE];
 
-            pollingMemebers = InitPollingMembers();
+            chains = InitMethodChains();
+        }
 
+        ~DriverPolling()
+        {
+            Dispose(false);
+        }
+
+        public void StartPolling(int pollingInterval)
+        {
             pollTimer = new System.Timers.Timer();
             pollTimer.Interval = pollingInterval;
 
@@ -53,41 +56,64 @@ namespace VHClibWrapper
 
             // Start the timer
             pollTimer.Start();
-
-            Console.WriteLine("Press the Enter key to exit the program at any time... ");
-            Console.ReadLine();
         }
 
-        ~DriverPolling()
+        public void StopPolling()
         {
-            Dispose(false);
+            pollTimer.Stop();
         }
 
-        private static void OnPollEvent(Object source, System.Timers.ElapsedEventArgs e)
+        private void OnPollEvent(Object source, System.Timers.ElapsedEventArgs e)
         {
             uint status;
             uint returnedBytes = 0;
 
-            foreach (var tuple in pollingMemebers)
+            foreach (var chain in chains)
             {
-                status = tuple.Item1()
+                status = chain.DriverRead(buffer, buffer.Length, ref returnedBytes);
+
+                if (STATUS_PIPE_EMPTY == status)
+                {
+                    return;
+                }
+                else if (STATUS_SUCCESS == status)
+                {
+                    HidEventArg hidArg = new HidEventArg(buffer, chain.HidIoctlEnum);
+                    HidEvent(this, hidArg);
+
+                    if (chain.DriverWrite != null)
+                    {
+                        if (returnedBytes == hidArg.buffer.Length)
+                        {
+                            uint bytesWritten = chain.DriverWrite(hidArg.buffer, hidArg.buffer.Length);
+                            if (bytesWritten != hidArg.buffer.Length)
+                            {
+                                throw new Exception(String.Format("DriverPolling write error! sent: {0} written {1}", hidArg.buffer.Length, bytesWritten));
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception(String.Format("DriverPolling buffer length error! start: {0} returned: {1}", returnedBytes, hidArg.buffer.Length));
+
+                        }
+                    }
+                }
             }
-            status = NativeMethods.ReadGetFeatureReport(buffer, bufferSize, ref returnedBytes);
         }
 
         public uint CompleteGetFeature(byte[] buffer)
         {
-            return NativeMethods.WriteGetFeatureReport(buffer, buffer.Length);
+            return NativeMethods.Write_ReadReportQueue(buffer, buffer.Length);
         }
 
         public uint CompleteReadReport(byte[] buffer)
         {
-            return NativeMethods.WriteReadReport(buffer, buffer.Length);
+            return NativeMethods.Write_ReadReportQueue(buffer, buffer.Length);
         }
 
         public uint CompleteGetInputReport(byte[] buffer)
         {
-            return NativeMethods.WriteGetInputReport(buffer, buffer.Length);
+            return NativeMethods.Write_GetInputReportQueue(buffer, buffer.Length);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -111,40 +137,38 @@ namespace VHClibWrapper
             GC.SuppressFinalize(this);
         }
 
-        private void ProcessRequest(uint status, int responseBufferSize, EventHandler<HidEventArg> EventItem, DriverWriteDelegate WriteFunc)
+        private MethodChains[] InitMethodChains()
         {
-            if (STATUS_PIPE_EMPTY == status)
+            return new MethodChains[] 
             {
-                return;
-            }
-            else if (STATUS_SUCCESS == status)
-            {
-                HidEventArg hidArg = new HidEventArg();
-                Array.Copy(buffer, hidArg.buffer, responseBufferSize);
-                EventItem(this, hidArg);
-
-                if (WriteFunc != null)
-                {
-                    if(responseBufferSize==hidArg.buffer.Length)
-                    {
-                        WriteFunc(hidArg.buffer, hidArg.buffer.Length);
-                    }
-                }
-            }
-        }
-
-        private Tuple<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>[] InitPollingMembers()
-        {
-            Tuple<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>[] pollingMemebersTemp =
-            {
-                Tuple.Create<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>(NativeMethods.ReadSetFeatureReport, null, SetFeature),
-                Tuple.Create<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>(NativeMethods.ReadGetFeatureReport, NativeMethods.WriteGetFeatureReport, GetFeature),
-                Tuple.Create<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>(NativeMethods.ReadWriteReport, null, WriteReport),
-                Tuple.Create<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>(NativeMethods.ReadGetInputReportReport, NativeMethods.WriteGetInputReport, GetInputReport),
-                Tuple.Create<DriverReadDelegate, DriverWriteDelegate, EventHandler<HidEventArg>>(NativeMethods.ReadSetOutputReport, null, SetOutputReport),
+                new MethodChains(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
+                new MethodChains(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
+                new MethodChains(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
+                new MethodChains(NativeMethods.Read_GetInputReportQueue, NativeMethods.Write_GetInputReportQueue, HidIoctlEnum.GetInputReport),
+                new MethodChains(NativeMethods.Read_SetOutputReportQueue, null, HidIoctlEnum.SetOutputReport),
             };
-
-            return pollingMemebersTemp;
         }
+
+        private class MethodChains
+        {
+            internal MethodChains(DriverReadDelegate _DriverRead, DriverWriteDelegate _DriverWrite, HidIoctlEnum _HidIoctlEnum)
+            {
+                DriverRead= _DriverRead;
+                DriverWrite= _DriverWrite;
+                HidIoctlEnum= _HidIoctlEnum;
+            }
+            internal DriverReadDelegate DriverRead;
+            internal DriverWriteDelegate DriverWrite;
+            internal HidIoctlEnum HidIoctlEnum;
+        }
+    }
+
+    public enum HidIoctlEnum
+    {
+        SetFeature,
+        GetFeature,
+        WriteReport,
+        GetInputReport,
+        SetOutputReport
     }
 }

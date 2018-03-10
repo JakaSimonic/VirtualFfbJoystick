@@ -27,7 +27,7 @@ Environment:
 
 #include "driver.h"
 
-#define JOYSTICK_REPORT_SIZE 33
+#define READ_REPORT_MIN_SIZE 3
 
 
 NTSTATUS CompleteReadRequest(
@@ -178,7 +178,7 @@ NTSTATUS CompleteReadRequest(
 	{
 		if (WdfTimerStop(manualQueueContext->Timer, TRUE))
 		{
-			status = WdfRequestRetrieveInputBuffer(*Request, JOYSTICK_REPORT_SIZE, &inBuffer, &bytesDelivered);
+			status = WdfRequestRetrieveInputBuffer(*Request, READ_REPORT_MIN_SIZE, &inBuffer, &bytesDelivered);
 			KdPrint(("read complete %s", inBuffer));
 			if (!NT_SUCCESS(status))
 			{
@@ -187,16 +187,16 @@ NTSTATUS CompleteReadRequest(
 				return status;
 			}
 
-			if (bytesDelivered < JOYSTICK_REPORT_SIZE)
+			if (bytesDelivered < READ_REPORT_MIN_SIZE)
 			{
 				WdfRequestComplete(request, STATUS_CANCELLED);
 				return STATUS_BUFFER_TOO_SMALL;
 			}
 
-			status = VirtualHID_RequestCopyFromBuffer(request, inBuffer, JOYSTICK_REPORT_SIZE);
+			status = VirtualHID_RequestCopyFromBuffer(request, inBuffer, bytesDelivered);
 
 			WdfRequestComplete(request, status);
-			WdfRequestSetInformation(*Request, JOYSTICK_REPORT_SIZE);
+			WdfRequestSetInformation(*Request, bytesDelivered);
 			manualQueueContext->Request = NULL;
 		}
 	}
@@ -436,7 +436,7 @@ Return Value:
 	// users sending ioctls and creating trouble.
 	//
 	status = WdfDeviceInitAssignSDDLString(pDeviceInit,
-		&SDDL_DEVOBJ_SYS_ALL_ADM_ALL);
+		&SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX);
 	if (!NT_SUCCESS(status)) {
 		goto Cleanup;
 	}

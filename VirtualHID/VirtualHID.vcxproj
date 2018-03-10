@@ -198,7 +198,7 @@
       <AdditionalDependencies>$(DDK_LIB_PATH)\wdmsec.lib;$(DDK_LIB_PATH)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /E "$(SolutionDir)$(ConfigurationName)\$(AssemblyName)" "C:\Users\jaka\Desktop\$(AssemblyName)"</Command>
+      <Command>xcopy /Y /E "$(SolutionDir)$(IntermediateOutputPath)\$(AssemblyName)" "C:\Users\jaka\Desktop\$(AssemblyName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

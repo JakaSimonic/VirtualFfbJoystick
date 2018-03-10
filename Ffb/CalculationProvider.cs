@@ -8,8 +8,8 @@ namespace Ffb
     {
         private IReportDescriptorProperties _reportDescriptorProperties;
 
-        double TO_RAD = (360d / 255d) * (Math.PI / 180d);
-        double HALF_PI = Math.PI / 2;
+        const double TO_RAD = (360d / 255d) * (Math.PI / 180d);
+        const double HALF_PI = Math.PI / 2;
 
         public CalculationProvider(IReportDescriptorProperties reportDescriptorProperties)
         {
@@ -47,14 +47,13 @@ namespace Ffb
         {
             double directionX = dirParms.directionX;
             double directionY = dirParms.directionY;
-            double polarDirection = dirParms.direction;
 
             double angle;
             List<double> axes = new List<double>();
 
             if (dirParms.polar)
             {
-                angle = polarDirection * TO_RAD;
+                angle = directionX * TO_RAD;
             }
             else
             {

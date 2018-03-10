@@ -37,7 +37,8 @@ namespace Ffb
             new Dictionary<string, Func<object>>()
               {
                 {"BlockLoad", _ffbLogic.GetBlockLoad },
-                {"PIDState", _ffbLogic.GetPidState}
+                {"PIDState", _ffbLogic.GetPidState},
+                {"PIDPoolReport", _ffbLogic.GetPidPoolReport }
               },
 
             _ffbLogic.GetForces,

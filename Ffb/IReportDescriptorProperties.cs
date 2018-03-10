@@ -9,11 +9,11 @@ namespace Ffb
         double ENVELOPE_MAX { get;  }
         double DIRECTION_MAX { get;  }
         double MAX_PHASE { get; }
-        int FREE_ALL_EFFECTS { get; }
+        uint FREE_ALL_EFFECTS { get; }
         int MAX_LOOP { get; }
         int DOWNLOAD_FORCE_SAMPLE_AXES { get; }
         int MAX_DEVICE_GAIN { get; }
         long DURATION_INFINITE { get; }
-        int MAX_RAM_POOL { get; }
+        uint MAX_RAM_POOL { get; }
     }
 }

@@ -12,7 +12,6 @@ namespace VHClibWrapper
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern uint OpenDriverFile();
 
-
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern uint TestRead(
             [param: MarshalAs(UnmanagedType.LPArray)]
@@ -26,79 +25,82 @@ namespace VHClibWrapper
             byte[] buffer,
             uint bufferLength);
 
-
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadGetFeatureReport(
+        public static extern uint Read_GetFeatureQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadGetInputReportReport(
+        public static extern uint Read_GetInputReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadSetFeatureReport(
+        public static extern uint Read_SetFeatureQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadWriteReport(
+        public static extern uint Read_WriteReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadReadReport(
+        public static extern uint Read_ReadReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint ReadSetOutputReport(
+        public static extern uint Read_SetOutputReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bufferSize,
             ref uint returnedBytes);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint WriteGetFeatureReport(
+        public static extern uint Write_GetFeatureQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bytesToWrite);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint WriteReadReport(
+        public static extern uint Write_ReadReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bytesToWrite);
 
         [DllImport("VHClib.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint WriteGetInputReport(
+        public static extern uint Write_GetInputReportQueue(
             [param: MarshalAs(UnmanagedType.LPArray)]
             byte[] buffer,
             int bytesToWrite);
 
-        public static uint TestWrite(string testString)
+        public static uint TestWrite(string testMsg)
         {
-            byte[] testArray = Encoding.ASCII.GetBytes(testString);
+            byte[] testArray = Encoding.ASCII.GetBytes(testMsg);
             return TestWrite(testArray, (uint)testArray.Length);
         }
 
-        public static string TestRead()
+        public static uint TestRead(out string testMsg)
         {
             byte[] testArray = new byte[256];
             uint retLen = 0;
+
             uint result = TestRead(testArray, (uint)testArray.Length, ref retLen);
-            return Encoding.UTF8.GetString(testArray, 0, (int)retLen);
+
+            testMsg = Encoding.UTF8.GetString(testArray, 0, (int)retLen);
+
+            return result;
         }
 
         public static bool OpenFile()

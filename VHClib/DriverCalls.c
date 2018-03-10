@@ -30,13 +30,13 @@ usermode communication library
 __pragma(warning(disable: 4127)) while(constant); __pragma(warning(default: 4127))
 
 #define READ_HID(what, ioctl)																					\
-		__declspec(dllexport)  DWORD Read##what##Report(LPVOID buffer, int bufferSize, LPDWORD bytesReturned)	\
+		__declspec(dllexport)  DWORD Read_##what##Queue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned)	\
 		{																										\
 			return ReadFromDriver(ioctl, buffer, bufferSize, bytesReturned);									\
 		}
 
 #define WRITE_HID(what, ioctl)																\
-		__declspec(dllexport)  DWORD Write##what##Report(LPVOID buffer, int bytesToWrite)	\
+		__declspec(dllexport)  DWORD Write_##what##Queue(LPVOID buffer, int bytesToWrite)	\
 		{																					\
 			return WriteToDriver(ioctl, buffer, bytesToWrite);								\
 		}
@@ -229,14 +229,14 @@ extern "C" {
 
 	READ_HID(GetFeature, GET_FEATURE)
 	READ_HID(SetFeature, SET_FEATURE)
-	READ_HID(Write, WRITE_REPORT)
-	READ_HID(Read, READ_REPORT)
+	READ_HID(WriteReport, WRITE_REPORT)
+	READ_HID(ReadReport, READ_REPORT)
 	READ_HID(GetInputReport, GET_INPUT_REPORT)
-	READ_HID(SetOutput, SET_OUTPUT_REPORT)
+	READ_HID(SetOutputReport, SET_OUTPUT_REPORT)
 
 	WRITE_HID(GetFeature, COMPLETE_GET_FEATURE)
-	WRITE_HID(Read, COMPLETE_READ_REPORT)
-	WRITE_HID(GetInput, COMPLETE_GET_INPUT_REPORT)
+	WRITE_HID(ReadReport, COMPLETE_READ_REPORT)
+	WRITE_HID(GetInputReport, COMPLETE_GET_INPUT_REPORT)
 	
 	__declspec(dllexport)  DWORD OpenDriverFile()
 	{

@@ -7,12 +7,12 @@ namespace Ffb
     {
         private EffectsContainer _effectsContainer;
         private IReportDescriptorProperties _reportDescriptorProperties;
-
         private PID_BLOCK_LOAD pidBlockLoad;
         private PID_STATE pidState;
 
         public Action DisableActuators;
         public Action EnableActuators;
+        public Func<object> SendPidState;
 
         public FfbEngineLogic(IReportDescriptorProperties reportDescriptorProperties)
         {
@@ -96,6 +96,7 @@ namespace Ffb
                 case EFFECT_OPERATION.SOLO:
                     _effectsContainer.StopAllEffects();
                     _effectsContainer.StartEffect(operation.effectBlockIndex);
+
                     break;
 
                 case EFFECT_OPERATION.STOP:
@@ -163,6 +164,10 @@ namespace Ffb
         public object GetPidState()
         {
             return pidState;
+        }
+        public object GetPidPoolReport()
+        {
+            return new byte[] { 0x07, 0xFF, 0xFF, 0xFF, 0x01 };
         }
 
         public List<double> GetForces(JOYSTICK_INPUT joystickInput)

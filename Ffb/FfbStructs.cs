@@ -61,8 +61,9 @@ namespace Ffb
         public long triggerRepeatInterval;
         public int directionX;
         public int directionY;
-        public int direction;
         public bool polar;
+        public bool xEnabled;
+        public bool yEnabled;
         public EFFECT_TYPE effetType;
         public long startDelay;
     }
@@ -90,7 +91,7 @@ namespace Ffb
     {
         public int effectBlockIndex;   // 1..40
         public LOAD_STATUS loadStatus; // 1=Success,2=Full,3=Error
-        public int ramPoolAvailable;	// =0 or 0xFFFF?
+        public uint ramPoolAvailable;	// =0 or 0xFFFF?
     }
 
     public struct PID_STATE
@@ -108,7 +109,8 @@ namespace Ffb
     public struct CUSTOM_FORCE_PARAMETER
     {
         public int effectBlockIndex;
-        public double sampleCount;
+        public int sampleCount;
+        public int samplePeriod;
     }
     public enum LOAD_STATUS
     {
