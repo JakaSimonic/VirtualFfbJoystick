@@ -62,8 +62,7 @@ namespace Ffb
         public int directionX;
         public int directionY;
         public bool polar;
-        public bool xEnabled;
-        public bool yEnabled;
+        public List<bool> axisEnabled;
         public EFFECT_TYPE effetType;
         public long startDelay;
     }

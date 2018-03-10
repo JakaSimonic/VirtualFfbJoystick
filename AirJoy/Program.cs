@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VHClibWrapper;
 
 namespace AirJoy
@@ -15,12 +16,16 @@ namespace AirJoy
 
             driverPoll.StartPolling(30);
 
-            while (true) ;
+            while (true)
+            {
+                List<double> res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = new List<double>() { 0, 0 }, pressedButtonOffsets = new List<int>() });
+                Console.WriteLine("{0}", res[0]);
+            }
         }
 
         private static void DriverPoll(object sender, HidEventArg e)
         {
-            //Console.WriteLine(BitConverter.ToString(e.buffer));
+            Console.WriteLine(BitConverter.ToString(e.buffer));
             byte[] buffer = e.buffer;
             int initialBufferLength = buffer.Length;
             HidIoctlEnum hidIoctl = e.HidIoctlEnum;

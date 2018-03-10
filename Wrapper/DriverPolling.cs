@@ -68,9 +68,10 @@ namespace VHClibWrapper
             uint status;
             uint returnedBytes = 0;
 
+            status = NativeMethods.Read_GetFeatureQueue(buffer, buffer.Length, ref returnedBytes);
             foreach (var chain in chains)
             {
-                status = chain.DriverRead(buffer, buffer.Length, ref returnedBytes);
+                //status = chain.DriverRead(buffer, buffer.Length, ref returnedBytes);
 
                 if (STATUS_PIPE_EMPTY == status)
                 {

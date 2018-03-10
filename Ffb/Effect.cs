@@ -7,7 +7,7 @@ namespace Ffb
 {
     internal class Effect : IEffect
     {
-        private long ticksStart;
+        private long startTime;
         private long pauseTime = 0;
         private long lastUpdate;
         private bool paused = true;
@@ -27,8 +27,8 @@ namespace Ffb
         {
             paused = false;
             long startDelay = ((SET_EFFECT)_structDictonary["SET_EFFECT"]).startDelay;
-            ticksStart = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + startDelay;
-            lastUpdate = ticksStart;
+            startTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + startDelay;
+            lastUpdate = startTime;
             pauseTime = 0;
         }
 
@@ -41,7 +41,7 @@ namespace Ffb
         public void Continue()
         {
             paused = false;
-            ticksStart += (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - pauseTime;
+            startTime += (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - pauseTime;
             pauseTime = 0;
         }
 
@@ -50,14 +50,14 @@ namespace Ffb
             List<double> forces = joystickInput.axesPositions.Select(x => 0d).ToList();
             if (!paused)
             {
-                long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - ticksStart;
+                long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - startTime;
                 lastUpdate = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - lastUpdate;
                 SET_EFFECT setEffect = (SET_EFFECT)_structDictonary["SET_EFFECT"];
 
                 long duration = setEffect.duration;
                 long samplePeriod = setEffect.samplePeriod;
 
-                if (((elapsedTime < duration) && (elapsedTime > 0) && (lastUpdate > samplePeriod)) || (duration == _reportDescriptorProperties.DURATION_INFINITE))
+                if (((elapsedTime < duration) && (lastUpdate > samplePeriod)) || (duration == _reportDescriptorProperties.DURATION_INFINITE))
                 {
                     forces = _effect.GetForce(joystickInput, _structDictonary, elapsedTime);
                 }
@@ -123,7 +123,7 @@ namespace Ffb
 
             if (!buttonReleased)
             {
-                long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - ticksStart;
+                long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - startTime;
                 SET_EFFECT setEffect = (SET_EFFECT)_structDictonary["SET_EFFECT"];
                 long duration = setEffect.duration;
                 long triggerRepeatInterval = setEffect.triggerRepeatInterval;

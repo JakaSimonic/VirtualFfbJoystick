@@ -19,8 +19,7 @@ Environment:
 	usermode console application
 
 --*/
-
-
+#include <windows.h>
 #include <basetyps.h>
 #include <stdlib.h>
 #include <wtypes.h>
@@ -230,11 +229,12 @@ static int OpenDevice(LPGUID deviceInterface, PHANDLE pFile)
 	return 1;
 }
 
-static void PrintBuffer(char * pBiff, int buffSize)
+static void PrintBuffer(LPVOID pBiff, int buffSize)
 {
+	PCHAR p = (PCHAR)pBiff;
 	for (int i = 0; i < buffSize; i++)
 	{
-		printf(("%2.2x ", (pBiff + i)));
+		printf(("%2.2x ", (p + i)));
 	}
 	printf("\n");
 
@@ -246,7 +246,7 @@ main(
 	_In_ char *argv[]
 	)
 {
-	byte								buffer[255];
+	byte								buffer[256];
 	DWORD status;
 	DWORD returnSize;
 	UNREFERENCED_PARAMETER(argc);
@@ -254,20 +254,49 @@ main(
 
 	OpenDevice((LPGUID)&GUID_DEVINTERFACE_VIRTUALHID, &file);
 
+	WriteToDriver(TEST_WRITE, "hi-siri", 7);
+	ReadFromDriver(TEST_READ, &buffer, 256, &returnSize);
+	PrintBuffer(&buffer, 15);
 
-	
-	status = ReadFromDriver(READ_REPORT, &buffer, sizeof(buffer), &returnSize);
-	if (STATUS_OK == status)
+	while (1)
 	{
-		WriteToDriver(COMPLETE_READ_REPORT, &buffer, sizeof(buffer));
-	}
-	else
-	{
-		printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
-	}
 
-	//PrintBuffer((char*)&buffer, sizeof(buffer));
-	WriteToDriver(COMPLETE_READ_REPORT, "Hello world!", 255);
+
+		status = ReadFromDriver(GET_FEATURE, &buffer, sizeof(buffer), &returnSize);
+		if (STATUS_OK == status)
+		{
+			PrintBuffer(&buffer, 15);
+			WriteToDriver(COMPLETE_GET_FEATURE, &buffer, sizeof(buffer));
+		}
+		else
+		{
+			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+		}
+
+		status = ReadFromDriver(SET_FEATURE, &buffer, sizeof(buffer), &returnSize);
+		if (STATUS_OK == status)
+		{
+			PrintBuffer(&buffer, 15);
+		}
+		else
+		{
+			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+		}
+
+		status = ReadFromDriver(WRITE_REPORT, &buffer, sizeof(buffer), &returnSize);
+		if (STATUS_OK == status)
+		{
+			PrintBuffer(&buffer, 15);
+		}
+		else
+		{
+			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+		}
+
+		WriteToDriver(COMPLETE_READ_REPORT, "Hello world!", 255);
+
+		Sleep(1500);
+	}
 
 	CloseHandle(file);
 	return 0;

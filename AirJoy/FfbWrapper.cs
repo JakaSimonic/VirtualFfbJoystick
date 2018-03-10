@@ -10,7 +10,6 @@ namespace AirJoy
         private FfbEngine _ffbEngine;
         private Dictionary<int, EFFECT_OPERATION> EffectOperationMapper;
         private Dictionary<int, EFFECT_TYPE> EffectTypeMapper;
-        private Dictionary<Action<object>, Func<byte[], object>> FfbReportMapper;
         private Dictionary<int, SetInvoke> FfbWriteReportTypeMapper;
         private Dictionary<int, SetInvoke> FfbSetFeatureTypeMapper;
         private Dictionary<int, GetInvoke> FfbGetFeatureTypeMapper;
@@ -213,8 +212,7 @@ namespace AirJoy
                 samplePeriod = BitConverter.ToUInt16(buffer, 7),
                 gain = buffer[9],
                 trigerButton = buffer[10],
-                xEnabled = ((buffer[11] & 1) != 0),
-                yEnabled = (((buffer[11] >> 1) & 1) != 0),
+                axisEnabled = new List<bool>() { ((buffer[11] & 1) != 0), (((buffer[11] >> 1) & 1) != 0) },
                 polar = (((buffer[11] >> 2) & 1) != 0),
                 directionX = buffer[12],
                 directionY = buffer[13],
@@ -338,6 +336,10 @@ namespace AirJoy
 
                 MAX_RAM_POOL = 0xFFFF;
             }
+        }
+        public List<double> GetForces(JOYSTICK_INPUT input)
+        {
+            return _ffbEngine.GetForces(input);
         }
     }
 }

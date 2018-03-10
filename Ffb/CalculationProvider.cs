@@ -54,16 +54,21 @@ namespace Ffb
             if (dirParms.polar)
             {
                 angle = directionX * TO_RAD;
+                axes.Add(Math.Cos(angle));
+                axes.Add(Math.Sin(angle));
             }
             else
             {
                 double x = directionX / _reportDescriptorProperties.DIRECTION_MAX;
                 double y = directionY / _reportDescriptorProperties.DIRECTION_MAX;
                 angle = Math.Atan2(y, x) + HALF_PI;
+
+                axes.Add(Math.Cos(angle));
+                axes.Add(Math.Sin(angle));
+
+                axes = axes.Zip(dirParms.axisEnabled, (u, v) => v ? u : 0).ToList();
             }
 
-            axes.Add(Math.Cos(angle));
-            axes.Add(Math.Sin(angle));
             return axes;
         }
 
