@@ -15,19 +15,12 @@ namespace Ffb
         private IEffectType _effect;
         private Dictionary<string, object> _structDictonary;
         private IReportDescriptorProperties _reportDescriptorProperties;
-        private Timer debounceTimer = new Timer(35D);
 
         public Effect(IEffectType effect, IReportDescriptorProperties reportDescriptorProperties)
         {
             _effect = effect;
             _structDictonary = new Dictionary<string, object>();
             _reportDescriptorProperties = reportDescriptorProperties;
-            debounceTimer.Elapsed += (sender, e) =>
-            {
-                Start();
-                buttonReleased = false;
-                ((Timer)sender).Enabled = false;
-            };
         }
 
         public void Start()
@@ -121,12 +114,10 @@ namespace Ffb
 
         public void TriggerButtonPressed()
         {
-            if (debounceTimer.Enabled) return;
-
             if (paused)
             {
-                debounceTimer.Enabled = true;
-                debounceTimer.Start();
+                Start();
+                buttonReleased = false;
                 return;
             }
 
@@ -145,12 +136,6 @@ namespace Ffb
 
         public void TriggerButtonReleased()
         {
-            if (debounceTimer.Enabled == true)
-            {
-                debounceTimer.Enabled = false;
-                debounceTimer.Stop();
-            }
-
             buttonReleased = true;
             paused = true;
         }
