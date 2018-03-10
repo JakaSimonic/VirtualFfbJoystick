@@ -72,8 +72,7 @@ namespace AirJoy
 
             FfbReadReportTypeMapper = new Dictionary<int, GetInvoke>()
             {
-                {2, new GetInvoke(_ffbEngine.Get["PIDState"], PidBlockLoadMapper) },
-                {7, new GetInvoke(_ffbEngine.Get["PIDPoolReport"], PidPoolReportMapper) }
+                {2, new GetInvoke(_ffbEngine.Get["PIDState"], PidStateMapper) },
             };
         }
 
