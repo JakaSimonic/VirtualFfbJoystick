@@ -43,8 +43,8 @@ __pragma(warning(disable: 4127)) while(constant); __pragma(warning(default: 4127
 
 
 
-#define STATUS_PIPE_EMPTY	0xC00000D9L
-#define STATUS_OK			0L
+#define STATUS_NO_MORE_ENTRIES	259L
+#define STATUS_OK			1L
 #define STATUS_NOK			-1L
 
 HANDLE	file = NULL;

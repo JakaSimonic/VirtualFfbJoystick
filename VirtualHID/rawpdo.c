@@ -179,7 +179,7 @@ NTSTATUS CompleteReadRequest(
 		if (WdfTimerStop(manualQueueContext->Timer, TRUE))
 		{
 			status = WdfRequestRetrieveInputBuffer(*Request, READ_REPORT_MIN_SIZE, &inBuffer, &bytesDelivered);
-			KdPrint(("read complete %s", inBuffer));
+			
 			if (!NT_SUCCESS(status))
 			{
 				KdPrint(("WdfRequestRetrieveInputBuffer failed: %x", status));
@@ -202,7 +202,7 @@ NTSTATUS CompleteReadRequest(
 	}
 	else
 	{
-		status = STATUS_PIPE_EMPTY;
+		status = STATUS_NO_MORE_ENTRIES;
 	}
 
 	return status;
@@ -229,7 +229,6 @@ NTSTATUS ProcessReadRequest(
 
 		if (!NT_SUCCESS(status))
 		{
-			status = STATUS_PIPE_EMPTY;
 			return status;
 		}
 
@@ -258,7 +257,6 @@ NTSTATUS ProcessSetRequest(
 
 	if (!NT_SUCCESS(status))
 	{
-		status = STATUS_PIPE_EMPTY;
 		return status;
 	}
 
@@ -309,7 +307,6 @@ NTSTATUS ProcessGetRequest(
 
 		if (!NT_SUCCESS(status))
 		{
-			status = STATUS_PIPE_EMPTY;
 			return status;
 		}
 
@@ -367,7 +364,7 @@ NTSTATUS CompleteGetRequest(
 	}
 	else
 	{
-		status = STATUS_PIPE_EMPTY;
+		status = STATUS_NO_MORE_ENTRIES;
 	}
 
 	return status;

@@ -46,8 +46,8 @@ Environment:
 __pragma(warning(disable: 4127)) while(constant); __pragma(warning(default: 4127))
 
 
-#define STATUS_PIPE_EMPTY	0xC00000D9L
-#define STATUS_OK			0L
+#define STATUS_NO_MORE_ENTRIES	259L
+#define STATUS_OK			1L
 #define STATUS_NOK			-1L
 
 HANDLE	file = NULL;
@@ -231,10 +231,10 @@ static int OpenDevice(LPGUID deviceInterface, PHANDLE pFile)
 
 static void PrintBuffer(LPVOID pBiff, int buffSize)
 {
-	PCHAR p = (PCHAR)pBiff;
+	PCHAR p = pBiff;
 	for (int i = 0; i < buffSize; i++)
 	{
-		printf(("%2.2x ", (p + i)));
+		printf("%d %02X\n", i, *(p + i));
 	}
 	printf("\n");
 
@@ -246,17 +246,16 @@ main(
 	_In_ char *argv[]
 	)
 {
-	byte								buffer[256];
+	byte  buffer[256];
 	DWORD status;
 	DWORD returnSize;
 	UNREFERENCED_PARAMETER(argc);
 	UNREFERENCED_PARAMETER(argv);
 
 	OpenDevice((LPGUID)&GUID_DEVINTERFACE_VIRTUALHID, &file);
-
 	WriteToDriver(TEST_WRITE, "hi-siri", 7);
 	ReadFromDriver(TEST_READ, &buffer, 256, &returnSize);
-	PrintBuffer(&buffer, 15);
+	printf("%s\n", (PCHAR)&buffer);
 
 	while (1)
 	{
@@ -265,37 +264,76 @@ main(
 		status = ReadFromDriver(GET_FEATURE, &buffer, sizeof(buffer), &returnSize);
 		if (STATUS_OK == status)
 		{
-			PrintBuffer(&buffer, 15);
-			WriteToDriver(COMPLETE_GET_FEATURE, &buffer, sizeof(buffer));
+			printf("GET_FEATURE status:0x%d\n", status);
+
+			PrintBuffer(&buffer, returnSize);
+			WriteToDriver(COMPLETE_GET_FEATURE, &buffer, returnSize);
+			if (STATUS_OK == status)
+			{
+				printf("COMPLETE_GET_FEATURE status:0x%d\n", status);
+
+			}
+			else
+			{
+				printf("COMPLETE_GET_FEATURE failed:0x%x\n", GetLastError());
+			}
+
+		}
+		else if (STATUS_NO_MORE_ENTRIES == GetLastError())
+		{
+			printf("GET_FEATURE No more entries\n");
 		}
 		else
 		{
-			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+			printf("GET_FEATURE failed:0x%x\n", GetLastError());
 		}
 
 		status = ReadFromDriver(SET_FEATURE, &buffer, sizeof(buffer), &returnSize);
 		if (STATUS_OK == status)
 		{
+			printf("SET_FEATURE status:0x%d\n", status);
 			PrintBuffer(&buffer, 15);
+		}
+		else if (STATUS_NO_MORE_ENTRIES == GetLastError())
+		{
+			printf("SET_FEATURE No more entries\n");
 		}
 		else
 		{
-			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+			printf("SET_FEATURE request failed:0x%x\n", GetLastError());
 		}
 
 		status = ReadFromDriver(WRITE_REPORT, &buffer, sizeof(buffer), &returnSize);
 		if (STATUS_OK == status)
 		{
-			PrintBuffer(&buffer, 15);
+			printf("WRITE_REPORT status:0x%d\n", status);
+			PrintBuffer(&buffer, returnSize);
+		}
+		else if (STATUS_NO_MORE_ENTRIES == GetLastError())
+		{
+			printf("WRITE_REPORT No more entries\n");
 		}
 		else
 		{
-			printf("Retrieve Keyboard Attributes request failed:0x%x\n", GetLastError());
+			printf("WRITE_REPORTrequest failed:%lu\n", GetLastError());
 		}
 
-		WriteToDriver(COMPLETE_READ_REPORT, "Hello world!", 255);
+		status = ReadFromDriver(READ_REPORT, &buffer, sizeof(buffer), &returnSize);
+		if (STATUS_OK == status)
+		{
+			WriteToDriver(COMPLETE_READ_REPORT, "Hello world!", 13);
+		}
+		else if (STATUS_NO_MORE_ENTRIES == GetLastError())
+		{
+			printf("No more entries\n");
+		}
+		else
+		{
+			printf("COMPLETE_READ_REPORT failed:%lu\n", GetLastError());
+		}
 
-		Sleep(1500);
+
+		Sleep(5000);
 	}
 
 	CloseHandle(file);
