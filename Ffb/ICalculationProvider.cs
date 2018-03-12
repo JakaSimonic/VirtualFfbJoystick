@@ -10,5 +10,7 @@ namespace Ffb
 
         List<double> GetCondition(List<CONDITION> condInput, List<double> joystickInput);
         double ApplyGain(double value, double gain);
+
+        int GetCustomEffectSampleIndex(int sample, int sampleCount);
     }
 }

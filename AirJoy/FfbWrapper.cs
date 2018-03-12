@@ -52,8 +52,8 @@ namespace AirJoy
                 { 6,  new SetInvoke( _ffbEngine.Set["SetRampForce"], RampMapper ) },
                 { 10, new SetInvoke( _ffbEngine.Set["EffectOperation"], OperationMapper ) },
                 { 13, new SetInvoke( _ffbEngine.Set["DeviceGain"], DeviceGainMapper ) },
-                { 12, new SetInvoke( _ffbEngine.Set["PIDDeviceControl"], PidDeviceControlMapper) },
-                { 11, new SetInvoke(_ffbEngine.Set["PIDBlockFree"], BlockFreeMapper ) },
+                { 12, new SetInvoke( _ffbEngine.Set["PidDeviceControl"], PidDeviceControlMapper) },
+                { 11, new SetInvoke(_ffbEngine.Set["PidBlockFree"], BlockFreeMapper ) },
                 { 7, new SetInvoke( _ffbEngine.Set["CustomForceData"], CustomForceDataMapper) },
                 { 14,new SetInvoke(_ffbEngine.Set["SetCustomForce"], CustomForceMapper) }
             };
@@ -66,12 +66,12 @@ namespace AirJoy
             FfbGetFeatureTypeMapper = new Dictionary<int, GetInvoke>()
             {
                 {6, new GetInvoke(_ffbEngine.Get["BlockLoad"], PidBlockLoadMapper) },
-                {7, new GetInvoke(_ffbEngine.Get["PIDPoolReport"], PidPoolReportMapper) }
+                {7, new GetInvoke(_ffbEngine.Get["PidPoolReport"], PidPoolReportMapper) }
             };
 
             FfbReadReportTypeMapper = new Dictionary<int, GetInvoke>()
             {
-                {2, new GetInvoke(_ffbEngine.Get["PIDState"], PidStateMapper) },
+                {2, new GetInvoke(_ffbEngine.Get["PidState"], PidStateMapper) },
             };
         }
 
@@ -299,8 +299,6 @@ namespace AirJoy
             };
         }
 
-        private byte[] pidPoolReport = new byte[] { 0x07, 0xFF, 0xFF, 0xFF, 0x01 };
-
         internal class ReportDescriptorProoperties : IReportDescriptorProperties
         {
             public double MAX_GAIN { get; private set; }
@@ -337,6 +335,7 @@ namespace AirJoy
                 MAX_RAM_POOL = 0xFFFF;
             }
         }
+
         public List<double> GetForces(JOYSTICK_INPUT input)
         {
             return _ffbEngine.GetForces(input);
