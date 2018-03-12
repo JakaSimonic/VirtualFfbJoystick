@@ -5,37 +5,30 @@ namespace VHClibWrapper
 {
     public class DriverPolling : IDisposable
     {
-        private byte[] buffer;
-        private MethodChains[] chains;
-
-        private bool fileOpened;
+        private DriverCommunication[] driverCommunication;
         private Timer pollTimer;
         private bool disposed = false;
 
-        private const int BUFFER_SIZE = 256;
-        private const uint STATUS_PIPE_EMPTY = 0xC00000D9;
-        private const uint STATUS_SUCCESS = 1;
-        private const uint STATUS_CANCELLED = 0xC0000120;
-        private const uint STATUS_BUFFER_TOO_SMALL = 0xC0000023;
-
-        private delegate uint DriverReadDelegate(byte[] buffer, int bufferSize, ref uint returnSize);
-
-        private delegate uint DriverWriteDelegate(byte[] buffer, int bytesToWrite);
-
         public event EventHandler<HidEventArg> HidEvent;
 
+        public bool TestPassed { get; private set; } = false;
 
         public DriverPolling()
         {
-            fileOpened = NativeMethods.OpenFile();
-            if (!fileOpened)
+            if (NativeMethods.OpenFile())
             {
                 throw new Exception("File failed to open");
             }
 
-            buffer = new byte[BUFFER_SIZE];
+            string testMsg = string.Format("VirtualHID test time :{0}", DateTime.Now.TimeOfDay);
+            NativeMethods.TestWrite(testMsg);
+            TestPassed = string.Compare(NativeMethods.TestRead(), testMsg) == 0;
+            if (!TestPassed)
+            {
+                throw new Exception("Driver test failed!");
+            }
 
-            chains = InitMethodChains();
+            driverCommunication = MapDriverCommunication();
         }
 
         ~DriverPolling()
@@ -65,56 +58,42 @@ namespace VHClibWrapper
 
         private void OnPollEvent(Object source, System.Timers.ElapsedEventArgs e)
         {
-            uint status;
-            uint returnedBytes = 0;
-
-            status = NativeMethods.Read_GetFeatureQueue(buffer, buffer.Length, ref returnedBytes);
-            foreach (var chain in chains)
+            foreach (var dc in driverCommunication)
             {
-                //status = chain.DriverRead(buffer, buffer.Length, ref returnedBytes);
+                byte[] buffer = dc.DriverRead();
 
-                if (STATUS_PIPE_EMPTY == status)
+                if (buffer == null)
                 {
-                    return;
+                    continue;
                 }
-                else if (STATUS_SUCCESS == status)
+                else
                 {
-                    HidEventArg hidArg = new HidEventArg(buffer, chain.HidIoctlEnum);
+                    int returnedBytes = buffer.Length;
+
+                    HidEventArg hidArg = new HidEventArg(buffer, dc.HidIoctlEnum);
                     HidEvent(this, hidArg);
 
-                    if (chain.DriverWrite != null)
+                    if (dc.DriverWrite != null)
                     {
                         if (returnedBytes == hidArg.buffer.Length)
                         {
-                            uint bytesWritten = chain.DriverWrite(hidArg.buffer, hidArg.buffer.Length);
-                            if (bytesWritten != hidArg.buffer.Length)
-                            {
-                                throw new Exception(String.Format("DriverPolling write error! sent: {0} written {1}", hidArg.buffer.Length, bytesWritten));
-                            }
+                            dc.DriverWrite(hidArg.buffer);
                         }
                         else
                         {
                             throw new Exception(String.Format("DriverPolling buffer length error! start: {0} returned: {1}", returnedBytes, hidArg.buffer.Length));
-
                         }
                     }
                 }
             }
         }
 
-        public uint CompleteGetFeature(byte[] buffer)
+        public void SendReadReport(byte[] buffer)
         {
-            return NativeMethods.Write_ReadReportQueue(buffer, buffer.Length);
-        }
-
-        public uint CompleteReadReport(byte[] buffer)
-        {
-            return NativeMethods.Write_ReadReportQueue(buffer, buffer.Length);
-        }
-
-        public uint CompleteGetInputReport(byte[] buffer)
-        {
-            return NativeMethods.Write_GetInputReportQueue(buffer, buffer.Length);
+            if (NativeMethods.Read_ReadReportQueue() != null)
+            {
+                NativeMethods.Write_ReadReportQueue(buffer);
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -138,28 +117,29 @@ namespace VHClibWrapper
             GC.SuppressFinalize(this);
         }
 
-        private MethodChains[] InitMethodChains()
+        private DriverCommunication[] MapDriverCommunication()
         {
-            return new MethodChains[] 
+            return new DriverCommunication[]
             {
-                new MethodChains(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
-                new MethodChains(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
-                new MethodChains(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
-                new MethodChains(NativeMethods.Read_GetInputReportQueue, NativeMethods.Write_GetInputReportQueue, HidIoctlEnum.GetInputReport),
-                new MethodChains(NativeMethods.Read_SetOutputReportQueue, null, HidIoctlEnum.SetOutputReport),
+                new DriverCommunication(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
+                new DriverCommunication(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
+                new DriverCommunication(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
+                new DriverCommunication(NativeMethods.Read_GetInputReportQueue, NativeMethods.Write_GetInputReportQueue, HidIoctlEnum.GetInputReport),
+                new DriverCommunication(NativeMethods.Read_SetOutputReportQueue, null, HidIoctlEnum.SetOutputReport)
             };
         }
 
-        private class MethodChains
+        private class DriverCommunication
         {
-            internal MethodChains(DriverReadDelegate _DriverRead, DriverWriteDelegate _DriverWrite, HidIoctlEnum _HidIoctlEnum)
+            internal DriverCommunication(Func<byte[]> _DriverRead, Action<byte[]> _DriverWrite, HidIoctlEnum _HidIoctlEnum)
             {
-                DriverRead= _DriverRead;
-                DriverWrite= _DriverWrite;
-                HidIoctlEnum= _HidIoctlEnum;
+                DriverRead = _DriverRead;
+                DriverWrite = _DriverWrite;
+                HidIoctlEnum = _HidIoctlEnum;
             }
-            internal DriverReadDelegate DriverRead;
-            internal DriverWriteDelegate DriverWrite;
+
+            internal Func<byte[]> DriverRead;
+            internal Action<byte[]> DriverWrite;
             internal HidIoctlEnum HidIoctlEnum;
         }
     }

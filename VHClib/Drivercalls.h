@@ -18,19 +18,25 @@
 
 #include "..\VirtualHID\public.h"
 
-__declspec(dllexport)  DWORD ReadGetFeatureReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
-__declspec(dllexport)  DWORD ReadGetInputReportReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
-__declspec(dllexport)  DWORD ReadSetFeatureReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
-__declspec(dllexport)  DWORD ReadWriteReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
-__declspec(dllexport)  DWORD ReadReadReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
-__declspec(dllexport)  DWORD ReadSetOutputReport(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+#ifdef __cplusplus
+extern "C" {
+#endif
+__declspec(dllexport)  DWORD Read_GetFeatureQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+__declspec(dllexport)  DWORD Read_GetInputReportQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+__declspec(dllexport)  DWORD Read_SetFeatureQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+__declspec(dllexport)  DWORD Read_WriteQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+__declspec(dllexport)  DWORD Read_ReadQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
+__declspec(dllexport)  DWORD Read_SetOutputQueue(LPVOID buffer, int bufferSize, LPDWORD bytesReturned);
 
-__declspec(dllexport)  DWORD WriteGetFeatureReport(LPVOID buffer, int bytesToWrite);
-__declspec(dllexport)  DWORD WriteReadReport(LPVOID buffer, int bytesToWrite);
-__declspec(dllexport)  DWORD WriteGetInputReport(LPVOID buffer, int bytesToWrite);
+__declspec(dllexport)  DWORD Write_GetFeatureQueue(LPVOID buffer, int bytesToWrite);
+__declspec(dllexport)  DWORD Write_ReadQueue(LPVOID buffer, int bytesToWrite);
+__declspec(dllexport)  DWORD Write_GetInputQueue(LPVOID buffer, int bytesToWrite);
 
 __declspec(dllexport)  DWORD OpenDriverFile();
 __declspec(dllexport)  DWORD CloseDriverFile();
 
 __declspec(dllexport)  DWORD TestRead(PVOID buffer, DWORD bufferLength, LPDWORD returnedBytes);
 __declspec(dllexport)  DWORD TestWrite(PVOID testSequence, DWORD sequenceLen);
+#ifdef __cplusplus
+}
+#endif

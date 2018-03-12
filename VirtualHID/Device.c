@@ -1230,52 +1230,14 @@ NT status code.
 --*/
 {
 	NTSTATUS                status;
+#if DBG
 
-	//PHID_XFER_PACKET transferPacket;
-	//int cmp;
-	KdPrint(("ReadReport %s\n", ioctlName));
+#else
 
-	//cmp = strcmp("IOCTL_HID_READ_REPORT", ioctlName);
-	//if (cmp != 0)
-	//{
-	//	transferPacket = (PHID_XFER_PACKET)WdfRequestWdmGetIrp(Request)->UserBuffer;
+	UNREFERENCED_PARAMETER(ioctlName)
+#endif
 
-	//	KdPrint(("id %d\n", transferPacket->reportId));
-
-	//	for (int i = 0; i < (int)transferPacket->reportBufferLen; i++)
-	//	{
-	//		KdPrint(("%d 0x%x\n ", i, (unsigned char)*(transferPacket->reportBuffer + i)));
-	//	}
-
-	//	cmp = strcmp("IOCTL_HID_GET_FEATURE", ioctlName);
-
-	//	if (cmp == 0)
-	//	{
-	//		KdPrint(("GetFeature!"));
-	//		if (7 == transferPacket->reportId)
-	//		{
-	//			KdPrint(("Its seven!!\n"));
-	//			KdPrint(("%p\n", transferPacket->reportBuffer));
-	//			unsigned short * pRamPool = (unsigned short *)(transferPacket->reportBuffer + sizeof(transferPacket->reportId));
-	//			KdPrint(("%p\n", pRamPool));
-	//			*pRamPool = 0xFFFF;
-
-	//			unsigned char * maxEffect = (unsigned char *)pRamPool + sizeof(unsigned short);
-	//			KdPrint(("%p %d\n", maxEffect, sizeof(unsigned short)));
-	//			*maxEffect = 0xFF;
-
-	//			*(++maxEffect) = 0x81;
-
-	//			for (int i = 0; i < (int)transferPacket->reportBufferLen; i++)
-	//			{
-	//				KdPrint(("%d 0x%x\n ", i, (unsigned char)*(transferPacket->reportBuffer + i)));
-	//			}
-	//		}
-	//	}
-	//	WdfRequestSetInformation(Request, transferPacket->reportBufferLen);
-	//	*CompleteRequest = TRUE;
-	//	return STATUS_SUCCESS;
-	//}
+		KdPrint(("ReadReport %s\n", ioctlName));
 
 	//
 	// forward the request to manual queue
