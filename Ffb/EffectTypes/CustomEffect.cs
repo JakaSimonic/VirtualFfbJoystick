@@ -24,15 +24,12 @@ namespace Ffb
             double period = customForceParameter.samplePeriod;
             List<double> directions = _calculationProvider.GetDirection(eff);
 
-            int sampleIndex = (int)Math.Round((elapsedTime / period) * sampleCount);
-            if (sampleIndex > samples.Count)
-            {
-                sampleIndex %= samples.Count;
-            }
+            int sampleNormalized = (int)Math.Round((elapsedTime / period) * sampleCount);
+            int index = _calculationProvider.GetCustomEffectSampleIndex(sampleNormalized, samples.Count);
 
             foreach (var direction in directions)
             {
-                forces.Add(samples[sampleIndex] * direction);
+                forces.Add(samples[index++] * direction);
             }
             return forces;
         }

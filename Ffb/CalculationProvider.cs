@@ -132,5 +132,16 @@ namespace Ffb
 
             return axisForces;
         }
+
+        public int GetCustomEffectSampleIndex(int sample, int sampleCount)
+        {
+            if (sample > sampleCount)
+            {
+                sample %= sampleCount;
+            }
+
+            //samples are interleaved
+            return sample * _reportDescriptorProperties.DOWNLOAD_FORCE_SAMPLE_AXES;
+        }
     }
 }
