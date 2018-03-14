@@ -671,7 +671,6 @@ NTSTATUS
 {
 	NTSTATUS                status;
 	WDF_IO_QUEUE_CONFIG     queueConfig;
-	WDF_OBJECT_ATTRIBUTES   queueAttributes;
 	WDFQUEUE                queue;
 
 	WDF_IO_QUEUE_CONFIG_INIT(
@@ -681,7 +680,7 @@ NTSTATUS
 	status = WdfIoQueueCreate(
 		Device,
 		&queueConfig,
-		&queueAttributes,
+		WDF_NO_OBJECT_ATTRIBUTES,
 		&queue);
 
 	if (!NT_SUCCESS(status)) {
