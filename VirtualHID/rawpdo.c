@@ -29,7 +29,6 @@ Environment:
 
 #define READ_REPORT_MIN_SIZE 3
 
-
 NTSTATUS CompleteReadRequest(
 	WDFREQUEST* Request,
 	WDFQUEUE*	Queue
@@ -37,7 +36,8 @@ NTSTATUS CompleteReadRequest(
 
 NTSTATUS ProcessReadRequest(
 	WDFREQUEST* Request,
-	WDFQUEUE*	Queue
+	WDFQUEUE*	Queue,
+	WDFQUEUE*	CompleteQueue
 );
 
 NTSTATUS ManualQueueCreate(
@@ -52,7 +52,9 @@ NTSTATUS CompleteGetRequest(
 
 NTSTATUS ProcessGetRequest(
 	WDFREQUEST* Request,
-	WDFQUEUE* Queue
+	WDFQUEUE* Queue,
+	WDFQUEUE* CompleteQueue
+
 );
 
 NTSTATUS ProcessSetRequest(
@@ -97,13 +99,11 @@ Return Value:
 	NTSTATUS status = STATUS_SUCCESS;
 	WDFDEVICE parent = WdfIoQueueGetDevice(Queue);
 	PRPDO_DEVICE_DATA pdoData;
-	PMANUAL_QUEUE_CONTEXT manualQueueContext;
 
 	UNREFERENCED_PARAMETER(OutputBufferLength);
 	UNREFERENCED_PARAMETER(InputBufferLength);
 
 	pdoData = GetRawDeviceContext(parent);
-	manualQueueContext = GetManualQueueContext(Queue);
 
 	KdPrint(("Entered KbFilter_EvtIoDeviceControlForRawPdo\n"));
 
@@ -118,27 +118,27 @@ Return Value:
 		status = ProcessSetRequest(&Request, &pdoData->SetFeatureQueue);
 		break;
 	case GET_FEATURE:
-		status = ProcessGetRequest(&Request, &pdoData->GetFeatureQueue);
+		status = ProcessGetRequest(&Request, &pdoData->GetFeatureQueue, &pdoData->CompleteGetFeatureQueue);
 		break;
 	case COMPLETE_GET_FEATURE:
-		status = CompleteGetRequest(&Request, &pdoData->GetFeatureQueue);
+		status = CompleteGetRequest(&Request, &pdoData->CompleteGetFeatureQueue);
 		break;
 	case READ_REPORT:
 		KdPrint(("read report\n"));
-		status = ProcessReadRequest(&Request, &pdoData->ReadReportQueue);
+		status = ProcessReadRequest(&Request, &pdoData->ReadReportQueue, &pdoData->CompleteReadReportQueue);
 		break;
 	case COMPLETE_READ_REPORT:
 		KdPrint(("complete read report\n"));
-		status = CompleteReadRequest(&Request, &pdoData->ReadReportQueue);
+		status = CompleteReadRequest(&Request, &pdoData->CompleteReadReportQueue);
 		break;
 	case WRITE_REPORT:
 		status = ProcessSetRequest(&Request, &pdoData->WriteReportQueue);
 		break;
 	case GET_INPUT_REPORT:
-		status = ProcessGetRequest(&Request, &pdoData->GetInputQueue);
+		status = ProcessGetRequest(&Request, &pdoData->GetInputQueue, &pdoData->CompleteGetInputQueue);
 		break;
 	case COMPLETE_GET_INPUT_REPORT:
-		status = CompleteGetRequest(&Request, &pdoData->GetInputQueue);
+		status = CompleteGetRequest(&Request, &pdoData->CompleteGetInputQueue);
 		break;
 	case SET_OUTPUT_REPORT:
 		status = ProcessSetRequest(&Request, &pdoData->SetOutputQueue);
@@ -172,69 +172,58 @@ NTSTATUS CompleteReadRequest(
 	PVOID					inBuffer;
 	size_t	                bytesDelivered = 0;
 
-	PMANUAL_QUEUE_CONTEXT manualQueueContext = GetManualQueueContext(*Queue);
-	request = manualQueueContext->Request;
-	if (request != NULL)
+	status = WdfIoQueueRetrieveNextRequest(*Queue, &request);
+	if (!NT_SUCCESS(status))
 	{
-		if (WdfTimerStop(manualQueueContext->Timer, TRUE))
-		{
-			status = WdfRequestRetrieveInputBuffer(*Request, READ_REPORT_MIN_SIZE, &inBuffer, &bytesDelivered);
-			
-			if (!NT_SUCCESS(status))
-			{
-				KdPrint(("WdfRequestRetrieveInputBuffer failed: %x", status));
-				WdfRequestComplete(request, STATUS_CANCELLED);
-				return status;
-			}
-
-			if (bytesDelivered < READ_REPORT_MIN_SIZE)
-			{
-				WdfRequestComplete(request, STATUS_CANCELLED);
-				return STATUS_BUFFER_TOO_SMALL;
-			}
-
-			status = VirtualHID_RequestCopyFromBuffer(request, inBuffer, bytesDelivered);
-
-			WdfRequestComplete(request, status);
-			WdfRequestSetInformation(*Request, bytesDelivered);
-			manualQueueContext->Request = NULL;
-		}
+		KdPrint(("WdfIoQueueRetrieveNextRequest failed: %x", status));
+		return status;
 	}
-	else
+	status = WdfRequestRetrieveInputBuffer(*Request, READ_REPORT_MIN_SIZE, &inBuffer, &bytesDelivered);
+
+	if (!NT_SUCCESS(status))
 	{
-		status = STATUS_NO_MORE_ENTRIES;
+		KdPrint(("WdfRequestRetrieveInputBuffer failed: %x", status));
+		WdfRequestComplete(request, STATUS_CANCELLED);
+		return status;
 	}
+
+	if (bytesDelivered < READ_REPORT_MIN_SIZE)
+	{
+		WdfRequestComplete(request, STATUS_CANCELLED);
+		return STATUS_BUFFER_TOO_SMALL;
+	}
+
+	status = VirtualHID_RequestCopyFromBuffer(request, inBuffer, bytesDelivered);
+
+	WdfRequestComplete(request, status);
+	WdfRequestSetInformation(*Request, bytesDelivered);
 
 	return status;
 }
 
 NTSTATUS ProcessReadRequest(
 	WDFREQUEST* Request,
-	WDFQUEUE*	Queue
+	WDFQUEUE*	Queue,
+	WDFQUEUE*	CompleteQueue
 )
 {
 	WDFREQUEST				request;
 	NTSTATUS				status = STATUS_SUCCESS;
 
-	PMANUAL_QUEUE_CONTEXT manualQueueContext = GetManualQueueContext(*Queue);
-	if (manualQueueContext->Request != NULL)
+	status = WdfIoQueueRetrieveNextRequest(
+		*Queue,
+		&request);
+
+	if (!NT_SUCCESS(status))
 	{
-		request = manualQueueContext->Request;
+		return status;
 	}
-	else
+
+	status = WdfRequestForwardToIoQueue(request, *CompleteQueue);
+
+	if (!NT_SUCCESS(status))
 	{
-		status = WdfIoQueueRetrieveNextRequest(
-			*Queue,
-			&request);
-
-		if (!NT_SUCCESS(status))
-		{
-			return status;
-		}
-
-		manualQueueContext->Request = request;
-
-		WdfTimerStart(manualQueueContext->Timer, WDF_REL_TIMEOUT_IN_SEC(1));
+		return status;
 	}
 
 	WdfRequestSetInformation(*Request, 0);
@@ -280,39 +269,26 @@ NTSTATUS ProcessSetRequest(
 		WdfRequestComplete(request, status);
 	}
 
-	WdfRequestSetInformation(*Request, packet.reportBufferLen);
-
 	return status;
 }
 
 NTSTATUS ProcessGetRequest(
 	WDFREQUEST* Request,
-	WDFQUEUE*	Queue
+	WDFQUEUE*	Queue,
+	WDFQUEUE*	CompleteQueue
 )
 {
 	WDFREQUEST				request;
 	HID_XFER_PACKET         packet;
 	NTSTATUS				status;
 
-	PMANUAL_QUEUE_CONTEXT manualQueueContext = GetManualQueueContext(*Queue);
-	if (manualQueueContext->Request != NULL)
+	status = WdfIoQueueRetrieveNextRequest(
+		*Queue,
+		&request);
+
+	if (!NT_SUCCESS(status))
 	{
-		request = manualQueueContext->Request;
-	}
-	else
-	{
-		status = WdfIoQueueRetrieveNextRequest(
-			*Queue,
-			&request);
-
-		if (!NT_SUCCESS(status))
-		{
-			return status;
-		}
-
-		manualQueueContext->Request = request;
-
-		WdfTimerStart(manualQueueContext->Timer, WDF_REL_TIMEOUT_IN_SEC(1));
+		return status;
 	}
 
 	status = RequestGetHidXferPacket_ToReadFromDevice(request, &packet);
@@ -324,7 +300,12 @@ NTSTATUS ProcessGetRequest(
 
 	status = VirtualHID_RequestCopyFromBuffer(*Request, packet.reportBuffer, packet.reportBufferLen);
 
-	WdfRequestSetInformation(*Request, packet.reportBufferLen);
+	if (!NT_SUCCESS(status))
+	{
+		return status;
+	}
+
+	status = WdfRequestForwardToIoQueue(request, *CompleteQueue);
 
 	return status;
 }
@@ -338,34 +319,30 @@ NTSTATUS CompleteGetRequest(
 	HID_XFER_PACKET         packet;
 	NTSTATUS status = STATUS_SUCCESS;
 
-	PMANUAL_QUEUE_CONTEXT manualQueueContext = GetManualQueueContext(*Queue);
-	request = manualQueueContext->Request;
-	if (request != NULL)
-	{
-		if (WdfTimerStop(manualQueueContext->Timer, TRUE))
-		{
-			status = RequestGetHidXferPacket_ToReadFromDevice(
-				request,
-				&packet);
-			if (!NT_SUCCESS(status)) {
-				return status;
-			}
+	status = WdfIoQueueRetrieveNextRequest(
+		*Queue,
+		&request);
 
-			status = VirtualHID_RequestCopyToBuffer(*Request, &packet.reportBuffer, packet.reportBufferLen);
-			if (!NT_SUCCESS(status))
-			{
-				WdfRequestComplete(request, STATUS_CANCELLED);
-				return status;
-			}
-
-			WdfRequestCompleteWithInformation(request, status, packet.reportBufferLen);
-			manualQueueContext->Request = NULL;
-		}
-	}
-	else
+	if (!NT_SUCCESS(status))
 	{
-		status = STATUS_NO_MORE_ENTRIES;
+		return status;
 	}
+
+	status = RequestGetHidXferPacket_ToReadFromDevice(
+		request,
+		&packet);
+	if (!NT_SUCCESS(status)) {
+		return status;
+	}
+
+	status = VirtualHID_RequestCopyToBuffer(*Request, &packet.reportBuffer, packet.reportBufferLen);
+	if (!NT_SUCCESS(status))
+	{
+		WdfRequestComplete(request, STATUS_CANCELLED);
+		return status;
+	}
+
+	WdfRequestCompleteWithInformation(request, status, packet.reportBufferLen);
 
 	return status;
 }
@@ -602,6 +579,9 @@ Return Value:
 	status = ManualQueueCreate(Device, &pdoData->WriteReportQueue);
 	status = ManualQueueCreate(Device, &pdoData->GetInputQueue);
 	status = ManualQueueCreate(Device, &pdoData->SetOutputQueue);
+	status = ManualQueueCreate(Device, &pdoData->CompleteGetFeatureQueue);
+	status = ManualQueueCreate(Device, &pdoData->CompleteGetInputQueue);
+	status = ManualQueueCreate(Device, &pdoData->CompleteReadReportQueue);
 
 	if (!NT_SUCCESS(status)) {
 		goto Cleanup;
@@ -693,17 +673,10 @@ NTSTATUS
 	WDF_IO_QUEUE_CONFIG     queueConfig;
 	WDF_OBJECT_ATTRIBUTES   queueAttributes;
 	WDFQUEUE                queue;
-	PMANUAL_QUEUE_CONTEXT   queueContext;
-	WDF_TIMER_CONFIG        timerConfig;
-	WDF_OBJECT_ATTRIBUTES   timerAttributes;
 
 	WDF_IO_QUEUE_CONFIG_INIT(
 		&queueConfig,
 		WdfIoQueueDispatchManual);
-
-	WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(
-		&queueAttributes,
-		MANUAL_QUEUE_CONTEXT);
 
 	status = WdfIoQueueCreate(
 		Device,
@@ -716,61 +689,7 @@ NTSTATUS
 		return status;
 	}
 
-	queueContext = GetManualQueueContext(queue);
-	queueContext->Request = NULL;
-
-	WDF_TIMER_CONFIG_INIT_PERIODIC(
-		&timerConfig,
-		EvtTimerFunc,
-		500);
-
-	WDF_OBJECT_ATTRIBUTES_INIT(&timerAttributes);
-	timerAttributes.ParentObject = queue;
-	status = WdfTimerCreate(&timerConfig,
-		&timerAttributes,
-		&queueContext->Timer);
-
-	if (!NT_SUCCESS(status)) {
-		KdPrint(("WdfTimerCreate failed 0x%x\n", status));
-		return status;
-	}
-
 	*Queue = queue;
 
 	return status;
-}
-
-void
-EvtTimerFunc(
-	_In_  WDFTIMER          Timer
-)
-/*++
-Routine Description:
-
-This periodic timer callback routine checks the device's manual queue and
-completes any pending request with data from the device.
-
-Arguments:
-
-Timer - Handle to a timer object that was obtained from WdfTimerCreate.
-
-Return Value:
-
-VOID
-
---*/
-{
-	WDFQUEUE                queue;
-	PMANUAL_QUEUE_CONTEXT   queueContext;
-
-	KdPrint(("EvtTimerFunc\n"));
-
-	queue = (WDFQUEUE)WdfTimerGetParentObject(Timer);
-	queueContext = GetManualQueueContext(queue);
-
-	if (queueContext->Request != NULL)
-	{
-		WdfRequestComplete(queueContext->Request, STATUS_CANCELLED);
-		queueContext->Request = NULL;
-	}
 }

@@ -30,6 +30,9 @@ typedef struct _RPDO_DEVICE_DATA
 	WDFQUEUE WriteReportQueue;
 	WDFQUEUE GetInputQueue;
 	WDFQUEUE SetOutputQueue;
+	WDFQUEUE CompleteGetFeatureQueue;
+	WDFQUEUE CompleteGetInputQueue;
+	WDFQUEUE CompleteReadReportQueue;
 	BYTE	 TestBuffer[256];
 } RPDO_DEVICE_DATA, *PRPDO_DEVICE_DATA;
 
@@ -47,15 +50,6 @@ typedef struct _DEVICE_CONTEXT
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, GetDeviceContext);
-
-
-typedef struct _MANUAL_QUEUE_CONTEXT
-{
-	WDFREQUEST              Request;
-	WDFTIMER                Timer;
-} MANUAL_QUEUE_CONTEXT, *PMANUAL_QUEUE_CONTEXT;
-
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(MANUAL_QUEUE_CONTEXT, GetManualQueueContext);
 
 NTSTATUS
 VirtualHID_QueueCreate(
