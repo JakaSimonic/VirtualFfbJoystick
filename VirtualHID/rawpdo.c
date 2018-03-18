@@ -28,6 +28,7 @@ Environment:
 #include "driver.h"
 
 #define READ_REPORT_MIN_SIZE 3
+#define GET_REQUEST_MINIMAL_SIZE 2
 
 NTSTATUS CompleteReadRequest(
 	WDFREQUEST* Request,
@@ -306,7 +307,7 @@ NTSTATUS ProcessGetRequest(
 	}
 
 	status = WdfRequestForwardToIoQueue(request, *CompleteQueue);
-
+	KdPrint(("WdfRequestForwardToIoQueue: %x", status));
 	return status;
 }
 
@@ -317,6 +318,8 @@ NTSTATUS CompleteGetRequest(
 {
 	WDFREQUEST request;
 	HID_XFER_PACKET         packet;
+	PVOID inBuffer = NULL;
+	size_t bytesDelivered = 0;
 	NTSTATUS status = STATUS_SUCCESS;
 
 	status = WdfIoQueueRetrieveNextRequest(
@@ -325,6 +328,8 @@ NTSTATUS CompleteGetRequest(
 
 	if (!NT_SUCCESS(status))
 	{
+		KdPrint(("WdfIoQueueRetrieveNextRequest failed: %x", status));
+
 		return status;
 	}
 
@@ -335,15 +340,25 @@ NTSTATUS CompleteGetRequest(
 		return status;
 	}
 
-	status = VirtualHID_RequestCopyToBuffer(*Request, &packet.reportBuffer, packet.reportBufferLen);
+	status = WdfRequestRetrieveInputBuffer(*Request, GET_REQUEST_MINIMAL_SIZE, &inBuffer, &bytesDelivered);
+
 	if (!NT_SUCCESS(status))
 	{
+		KdPrint(("WdfRequestRetrieveInputBuffer failed: %x", status));
 		WdfRequestComplete(request, STATUS_CANCELLED);
 		return status;
 	}
 
-	WdfRequestCompleteWithInformation(request, status, packet.reportBufferLen);
+	if (bytesDelivered > packet.reportBufferLen)
+	{
+		WdfRequestComplete(request, STATUS_CANCELLED);
+		return STATUS_BUFFER_TOO_SMALL;
+	}
 
+	RtlCopyMemory(packet.reportBuffer, inBuffer, bytesDelivered);
+
+	WdfRequestCompleteWithInformation(request, status, bytesDelivered);
+	KdPrint(("CompleteGetRequest %x", status));
 	return status;
 }
 #define MAX_ID_LEN 128
