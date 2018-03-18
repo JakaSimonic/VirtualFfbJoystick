@@ -95,7 +95,7 @@ namespace VHClibWrapper
         {
             uint res = Write_GetFeatureQueue(buffer, buffer.Length);
 
-            if (res != STATUS_SUCCESS)
+            if (res != buffer.Length)
             {
                 throw new Exception(String.Format("Write_GetFeatureQueue returned: {0}", Marshal.GetLastWin32Error()));
             }
@@ -105,7 +105,7 @@ namespace VHClibWrapper
         {
             uint res = Write_ReadReportQueue(buffer, buffer.Length);
 
-            if (res != STATUS_SUCCESS)
+            if (res != buffer.Length)
             {
                 throw new Exception(String.Format("Write_ReadReportQueue returned: {0}", Marshal.GetLastWin32Error()));
             }
@@ -115,7 +115,7 @@ namespace VHClibWrapper
         {
             uint res = Write_GetInputReportQueue(buffer, buffer.Length);
 
-            if (res != STATUS_SUCCESS)
+            if (res != buffer.Length)
             {
                 throw new Exception(String.Format("Write_GetInputReportQueue returned: {0}", Marshal.GetLastWin32Error()));
             }
@@ -164,7 +164,7 @@ namespace VHClibWrapper
                 }
                 else
                 {
-                    throw new Exception(String.Format("Read_GetFeatureQueue returned {0}", lastError));
+                    throw new Exception(String.Format("Read_GetInputReportQueue returned {0}", lastError));
                 }
             }
         }
@@ -188,7 +188,7 @@ namespace VHClibWrapper
                 }
                 else
                 {
-                    throw new Exception(String.Format("Read_GetFeatureQueue returned {0}", lastError));
+                    throw new Exception(String.Format("Read_SetFeatureQueue returned {0}", lastError));
                 }
             }
         }
@@ -212,7 +212,7 @@ namespace VHClibWrapper
                 }
                 else
                 {
-                    throw new Exception(String.Format("Read_GetFeatureQueue returned {0}", lastError));
+                    throw new Exception(String.Format("Read_WriteReportQueue returned {0}", lastError));
                 }
             }
         }
@@ -236,7 +236,7 @@ namespace VHClibWrapper
                 }
                 else
                 {
-                    throw new Exception(String.Format("Read_GetFeatureQueue returned {0}", lastError));
+                    throw new Exception(String.Format("Read_ReadReportQueue returned {0}", lastError));
                 }
             }
         }
@@ -260,7 +260,7 @@ namespace VHClibWrapper
                 }
                 else
                 {
-                    throw new Exception(String.Format("Read_GetFeatureQueue returned {0}", lastError));
+                    throw new Exception(String.Format("Read_SetOutputReportQueue returned {0}", lastError));
                 }
             }
         }
