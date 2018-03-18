@@ -4,15 +4,15 @@ Copyright (C) Microsoft Corporation, All Rights Reserved.
 
 Module Name:
 
-    util.cpp
+	util.cpp
 
 Abstract:
 
-    This module contains the implementation of the driver
+	This module contains the implementation of the driver
 
 Environment:
 
-    Windows Driver Framework (WDF)
+	Windows Driver Framework (WDF)
 
 --*/
 
@@ -40,44 +40,52 @@ Environment:
 
 NTSTATUS
 RequestGetHidXferPacket_ToReadFromDevice(
-    _In_  WDFREQUEST        Request,
-    _Out_ HID_XFER_PACKET  *Packet
-    )
+	_In_  WDFREQUEST        Request,
+	_Out_ HID_XFER_PACKET  *Packet
+)
 {
-    NTSTATUS                status;
-    WDF_REQUEST_PARAMETERS  params;
+	NTSTATUS                status;
+	WDF_REQUEST_PARAMETERS  params;
 
-    WDF_REQUEST_PARAMETERS_INIT(&params);
-    WdfRequestGetParameters(Request, &params);
+	WDF_REQUEST_PARAMETERS_INIT(&params);
+	WdfRequestGetParameters(Request, &params);
 
-    if (params.Parameters.DeviceIoControl.OutputBufferLength < sizeof(HID_XFER_PACKET)) {
-        status = STATUS_BUFFER_TOO_SMALL;
-        KdPrint(("RequestGetHidXferPacket: invalid HID_XFER_PACKET\n"));
-        return status;
-    }
+	if (params.Parameters.DeviceIoControl.OutputBufferLength < sizeof(HID_XFER_PACKET)) {
+		status = STATUS_BUFFER_TOO_SMALL;
+		KdPrint(("RequestGetHidXferPacket: invalid HID_XFER_PACKET\n"));
+		return status;
+	}
 
-    RtlCopyMemory(Packet, WdfRequestWdmGetIrp(Request)->UserBuffer, sizeof(HID_XFER_PACKET));
-    return STATUS_SUCCESS;
+	RtlCopyMemory(Packet, WdfRequestWdmGetIrp(Request)->UserBuffer, sizeof(HID_XFER_PACKET));
+	KdPrint(("From request to packet\n"));
+
+	for (int i = 0; i < ((int)params.Parameters.DeviceIoControl.OutputBufferLength); i++)
+	{
+		KdPrint(("%d %02X\n", i, *(Packet->reportBuffer + i)));
+	}
+	KdPrint(("\n"));
+
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
 RequestGetHidXferPacket_ToWriteToDevice(
-    _In_  WDFREQUEST        Request,
-    _Out_ HID_XFER_PACKET  *Packet
-    )
+	_In_  WDFREQUEST        Request,
+	_Out_ HID_XFER_PACKET  *Packet
+)
 {
-    NTSTATUS                status;
-    WDF_REQUEST_PARAMETERS  params;
+	NTSTATUS                status;
+	WDF_REQUEST_PARAMETERS  params;
 
-    WDF_REQUEST_PARAMETERS_INIT(&params);
-    WdfRequestGetParameters(Request, &params);
+	WDF_REQUEST_PARAMETERS_INIT(&params);
+	WdfRequestGetParameters(Request, &params);
 
-    if (params.Parameters.DeviceIoControl.InputBufferLength < sizeof(HID_XFER_PACKET)) {
-        status = STATUS_BUFFER_TOO_SMALL;
-        KdPrint(("RequestGetHidXferPacket: invalid HID_XFER_PACKET\n"));
-        return status;
-    }
+	if (params.Parameters.DeviceIoControl.InputBufferLength < sizeof(HID_XFER_PACKET)) {
+		status = STATUS_BUFFER_TOO_SMALL;
+		KdPrint(("RequestGetHidXferPacket: invalid HID_XFER_PACKET\n"));
+		return status;
+	}
 
-    RtlCopyMemory(Packet, WdfRequestWdmGetIrp(Request)->UserBuffer, sizeof(HID_XFER_PACKET));
-    return STATUS_SUCCESS;
+	RtlCopyMemory(Packet, WdfRequestWdmGetIrp(Request)->UserBuffer, sizeof(HID_XFER_PACKET));
+	return STATUS_SUCCESS;
 }
