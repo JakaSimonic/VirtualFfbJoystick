@@ -26,8 +26,8 @@ namespace Ffb
                 {"SetConstantForce",  _ffbLogic.SetConstantParameter},
                 {"SetRampForce",  _ffbLogic.SetRampParameter},
                 {"EffectOperation", _ffbLogic.EffectsOperation },
-                {"PIDBlockFree", _ffbLogic.PIDBlockFree },
-                {"PIDDeviceControl", _ffbLogic.PIDDeviceControl },
+                {"PidBlockFree", _ffbLogic.PIDBlockFree },
+                {"PidDeviceControl", _ffbLogic.PIDDeviceControl },
                 {"DeviceGain", _ffbLogic.DeviceGain },
                 {"CreateNewEffect", _ffbLogic.CreateNewEffect },
                 {"CustomForceData", _ffbLogic.CustomForceData},
@@ -37,8 +37,8 @@ namespace Ffb
             new Dictionary<string, Func<object>>()
               {
                 {"BlockLoad", _ffbLogic.GetBlockLoad },
-                {"PIDState", _ffbLogic.GetPidState},
-                {"PIDPoolReport", _ffbLogic.GetPidPoolReport }
+                {"PidState", _ffbLogic.GetPidState},
+                {"PidPoolReport", _ffbLogic.GetPidPoolReport }
               },
 
             _ffbLogic.GetForces,

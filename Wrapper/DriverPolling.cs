@@ -15,7 +15,7 @@ namespace VHClibWrapper
 
         public DriverPolling()
         {
-            if (NativeMethods.OpenFile())
+            if (!NativeMethods.OpenFile())
             {
                 throw new Exception("File failed to open");
             }

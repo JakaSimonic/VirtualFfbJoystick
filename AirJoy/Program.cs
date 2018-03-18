@@ -19,29 +19,28 @@ namespace AirJoy
             while (true)
             {
                 List<double> res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = new List<double>() { 0, 0 }, pressedButtonOffsets = new List<int>() });
-                Console.WriteLine("{0}", res[0]);
+                //Console.WriteLine("{0}", res[0]);
+                System.Threading.Thread.Sleep(100);
             }
         }
 
         private static void DriverPoll(object sender, HidEventArg e)
         {
             Console.WriteLine(BitConverter.ToString(e.buffer));
-            byte[] buffer = e.buffer;
-            int initialBufferLength = buffer.Length;
             HidIoctlEnum hidIoctl = e.HidIoctlEnum;
 
             switch (hidIoctl)
             {
                 case HidIoctlEnum.SetFeature:
-                    ffbWrapper.SetFeature(buffer);
+                    ffbWrapper.SetFeature(e.buffer);
                     break;
 
                 case HidIoctlEnum.GetFeature:
-                    buffer = ffbWrapper.GetFeature(buffer);
+                    e.buffer = ffbWrapper.GetFeature(e.buffer);
                     break;
 
                 case HidIoctlEnum.WriteReport:
-                    ffbWrapper.WriteReport(buffer);
+                    ffbWrapper.WriteReport(e.buffer);
                     break;
 
                 case HidIoctlEnum.GetInputReport:

@@ -101,13 +101,13 @@ namespace AirJoy
 
         public void WriteReport(byte[] buffer)
         {
-            SetInvoke invoke = FfbSetFeatureTypeMapper[buffer[0]];
+            SetInvoke invoke = FfbWriteReportTypeMapper[buffer[0]];
             invoke.Invoke(buffer);
         }
 
         public void SetFeature(byte[] buffer)
         {
-            SetInvoke invoke = FfbWriteReportTypeMapper[buffer[0]];
+            SetInvoke invoke = FfbSetFeatureTypeMapper[buffer[0]];
             invoke.Invoke(buffer);
         }
 
