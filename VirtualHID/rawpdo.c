@@ -318,8 +318,6 @@ NTSTATUS CompleteGetRequest(
 {
 	WDFREQUEST request;
 	HID_XFER_PACKET         packet;
-	PVOID inBuffer = NULL;
-	size_t bytesDelivered = 0;
 	NTSTATUS status = STATUS_SUCCESS;
 
 	status = WdfIoQueueRetrieveNextRequest(
@@ -340,24 +338,16 @@ NTSTATUS CompleteGetRequest(
 		return status;
 	}
 
-	status = WdfRequestRetrieveInputBuffer(*Request, GET_REQUEST_MINIMAL_SIZE, &inBuffer, &bytesDelivered);
+	status = VirtualHID_RequestCopyToBuffer(*Request, packet.reportBuffer, packet.reportBufferLen);
 
 	if (!NT_SUCCESS(status))
 	{
-		KdPrint(("WdfRequestRetrieveInputBuffer failed: %x", status));
+		KdPrint(("VirtualHID_RequestCopyToBuffer failed: %x", status));
 		WdfRequestComplete(request, STATUS_CANCELLED);
 		return status;
 	}
 
-	if (bytesDelivered > packet.reportBufferLen)
-	{
-		WdfRequestComplete(request, STATUS_CANCELLED);
-		return STATUS_BUFFER_TOO_SMALL;
-	}
-
-	RtlCopyMemory(packet.reportBuffer, inBuffer, bytesDelivered);
-
-	WdfRequestCompleteWithInformation(request, status, bytesDelivered);
+	WdfRequestCompleteWithInformation(request, status, packet.reportBufferLen);
 	KdPrint(("CompleteGetRequest %x", status));
 	return status;
 }
