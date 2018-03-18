@@ -213,6 +213,9 @@
     <Link>
       <AdditionalDependencies>$(ddk_lib_path)\wdmsec.lib;$(ddk_lib_path)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /E "$(SolutionDir)$(IntermediateOutputPath)\$(AssemblyName)" "C:\Users\jaka\Desktop\VirtualHID"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>

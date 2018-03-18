@@ -255,7 +255,7 @@ namespace AirJoy
         private byte[] PidBlockLoadMapper(object ffbStruct)
         {
             PID_BLOCK_LOAD pidBlockLoad = (PID_BLOCK_LOAD)ffbStruct;
-            byte[] buffer = new byte[4];
+            byte[] buffer = new byte[5];
 
             buffer[0] = 6;
             buffer[1] = (byte)pidBlockLoad.effectBlockIndex;
