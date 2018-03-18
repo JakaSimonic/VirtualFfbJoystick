@@ -116,8 +116,8 @@ KMDriverCopy=12
 ;---------------------------------------------------------------;
 
 [Strings]
-ProviderString     = "telesimke@gmail.com"
-ManufacturerString = "telesimke@gmail.com"
+ProviderString     = "jaka.simonic82@gmail.com"
+ManufacturerString = "jaka.simonic82@gmail.com"
 ClassName          = "HID Class"
 DeviceDesc         = "VirtualHID Device"
 ServiceDesc        = "VirtualHID Service"
