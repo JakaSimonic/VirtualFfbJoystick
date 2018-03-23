@@ -33,6 +33,16 @@ namespace Ffb
             double tempforce = sine * magnitude;
             tempforce += offset;
 
+            double maxValue = _reportDescriptorProperties.MAX_VALUE_EFFECT;
+            if (tempforce < -maxValue)
+            {
+                tempforce = -maxValue;
+            }
+            if (tempforce > maxValue)
+            {
+                tempforce = maxValue;
+            }
+
             double envelope = _calculationProvider.ApplyGain(_calculationProvider.GetEnvelope(env, elapsedTime, eff.duration), eff.gain);
 
             List<double> directions = _calculationProvider.GetDirection(eff);

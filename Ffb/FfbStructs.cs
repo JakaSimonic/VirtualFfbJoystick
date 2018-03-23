@@ -5,27 +5,27 @@ namespace Ffb
     public struct CONDITION
     {
         public int effectBlockIndex;
-        public double deadBand;
-        public double cpOffset;
-        public double negativeSaturation;
-        public double positiveSaturation;
-        public double negativeCoefficient;
-        public double positiveCoefficient;
+        public int deadBand;
+        public int cpOffset;
+        public int negativeSaturation;
+        public int positiveSaturation;
+        public int negativeCoefficient;
+        public int positiveCoefficient;
     }
 
     public struct CONSTANT
     {
         public int effectBlockIndex;
-        public double magnitude;
+        public int magnitude;
     }
 
     public struct ENVELOPE
     {
         public int effectBlockIndex;
-        public double attackLevel;
-        public double attackTime;
-        public double fadeLevel;
-        public double fadeTime;
+        public int attackLevel;
+        public int attackTime;
+        public int fadeLevel;
+        public int fadeTime;
     }
 
     public struct OPERATION
@@ -38,24 +38,24 @@ namespace Ffb
     public struct PERIOD
     {
         public int effectBlockIndex;
-        public double magnitude;
-        public double offset;
-        public double period;
-        public double phase;
+        public int magnitude;
+        public int offset;
+        public int period;
+        public int phase;
     }
 
     public struct RAMP
     {
         public int effectBlockIndex;
-        public double end;
-        public double start;
+        public int end;
+        public int start;
     }
 
     public struct SET_EFFECT
     {
         public int effectBlockIndex;
         public long duration;
-        public double gain;
+        public int gain;
         public long samplePeriod;
         public int trigerButton;
         public long triggerRepeatInterval;

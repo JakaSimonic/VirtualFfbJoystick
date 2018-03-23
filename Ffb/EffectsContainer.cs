@@ -101,7 +101,7 @@ namespace Ffb
 
             foreach (var effect in _effects.ToList())
             {
-                if (effect != null)
+                if (effect != null && effect.Operational)
                 {
                     List<double> forces = effect.GetForce(joystickInput);
                     forcesSum = forcesSum.Zip(forces, (u, v) => u + v).ToList();
@@ -115,9 +115,14 @@ namespace Ffb
         {
             foreach (var effect in _effects.ToList())
             {
-                if (effect != null)
+                if (effect != null && effect.Operational)
                 {
                     int triggerButton = ((SET_EFFECT)effect.GetParameter("SET_EFFECT")).trigerButton;
+                    if (triggerButton == 0xFF)
+                    {
+                        continue;
+                    }
+
                     if (pressedButtons.Contains(triggerButton))
                     {
                         effect.TriggerButtonPressed();
@@ -155,7 +160,7 @@ namespace Ffb
                 ENVELOPE envelope = (ENVELOPE)effect.GetParameter("ENVELOPE");
 
                 setEffect.duration = _reportDescriptorProperties.DURATION_INFINITE;
-                envelope.fadeTime = 0d;
+                envelope.fadeTime = 0;
             }
             else
             {

@@ -19,7 +19,6 @@ namespace Ffb
         {
             SET_EFFECT eff = (SET_EFFECT)structDictonary["SET_EFFECT"];
             List<CONDITION> cond = (List<CONDITION>)structDictonary["CONDITION"];
-            ENVELOPE env = (ENVELOPE)structDictonary["ENVELOPE"];
 
             List<double> forces = joystickInput.axesPositions.Select(x => 0d).ToList();
 

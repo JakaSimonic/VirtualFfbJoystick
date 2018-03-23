@@ -139,12 +139,12 @@ namespace AirJoy
             return new CONDITION
             {
                 effectBlockIndex = buffer[1],
-                deadBand = buffer[8],
-                cpOffset = BitConverter.ToUInt16(buffer, 2),
-                negativeSaturation = buffer[7],
-                positiveSaturation = buffer[6],
-                negativeCoefficient = buffer[5],
-                positiveCoefficient = buffer[4]
+                cpOffset = BitConverter.ToInt16(buffer, 3),
+                positiveCoefficient = BitConverter.ToInt16(buffer, 5),
+                negativeCoefficient = BitConverter.ToInt16(buffer, 7),
+                positiveSaturation = buffer[9],
+                negativeSaturation = buffer[10],
+                deadBand = buffer[11],
             };
         }
 
@@ -185,9 +185,9 @@ namespace AirJoy
             {
                 effectBlockIndex = buffer[1],
                 magnitude = buffer[2],
-                offset = buffer[3],
+                offset = (sbyte)buffer[3] * 2,
+                phase = buffer[4],
                 period = BitConverter.ToUInt16(buffer, 5),
-                phase = buffer[4]
             };
         }
 
@@ -196,8 +196,8 @@ namespace AirJoy
             return new RAMP
             {
                 effectBlockIndex = buffer[1],
-                end = buffer[2],
-                start = buffer[3]
+                end = (sbyte)buffer[3] * 2,
+                start = (sbyte)buffer[2] * 2
             };
         }
 
@@ -214,8 +214,8 @@ namespace AirJoy
                 trigerButton = buffer[10],
                 axisEnabled = new List<bool>() { ((buffer[11] & 1) != 0), (((buffer[11] >> 1) & 1) != 0) },
                 polar = (((buffer[11] >> 2) & 1) != 0),
-                directionX = buffer[12],
-                directionY = buffer[13],
+                directionX = (sbyte)buffer[12],
+                directionY = (sbyte)buffer[13],
                 startDelay = BitConverter.ToUInt16(buffer, 14)
             };
         }
@@ -285,7 +285,7 @@ namespace AirJoy
             return new CUSTOM_FORCE_DATA_REPORT
             {
                 effectBlockIndex = buffer[1],
-                samples = buffer.Skip(4).Select(x => (int)x).ToList()
+                samples = buffer.Skip(4).Select(x => (int)(sbyte)x).ToList()
             };
         }
 
@@ -312,6 +312,8 @@ namespace AirJoy
             public uint MAX_RAM_POOL { get; }
             public long DURATION_INFINITE { get; }
 
+            public double MAX_VALUE_EFFECT { get; }
+
             public ReportDescriptorProoperties()
             {
                 DIRECTION_MAX = 255d;
@@ -333,6 +335,8 @@ namespace AirJoy
                 MAX_PHASE = 255d;
 
                 MAX_RAM_POOL = 0xFFFF;
+
+                MAX_VALUE_EFFECT = 255;
             }
         }
 

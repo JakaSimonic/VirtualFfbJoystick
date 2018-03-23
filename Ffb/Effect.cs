@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 
 namespace Ffb
 {
@@ -15,6 +14,12 @@ namespace Ffb
         private IEffectType _effect;
         private Dictionary<string, object> _structDictonary;
         private IReportDescriptorProperties _reportDescriptorProperties;
+
+        public bool Operational
+        {
+            get;
+            private set;
+        } = false;
 
         public Effect(IEffectType effect, IReportDescriptorProperties reportDescriptorProperties)
         {
@@ -51,13 +56,15 @@ namespace Ffb
             if (!paused)
             {
                 long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - startTime;
-                lastUpdate = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - lastUpdate;
+                long lastUpdateDeltaTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - lastUpdate;
+                lastUpdate = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
                 SET_EFFECT setEffect = (SET_EFFECT)_structDictonary["SET_EFFECT"];
 
                 long duration = setEffect.duration;
                 long samplePeriod = setEffect.samplePeriod;
-
-                if (((elapsedTime < duration) && (lastUpdate > samplePeriod)) || (duration == _reportDescriptorProperties.DURATION_INFINITE))
+                if (((elapsedTime > 0) && 
+                    ((elapsedTime < duration) || (duration == _reportDescriptorProperties.DURATION_INFINITE))) && 
+                    (lastUpdateDeltaTime > samplePeriod))
                 {
                     forces = _effect.GetForce(joystickInput, _structDictonary, elapsedTime);
                 }
@@ -69,6 +76,11 @@ namespace Ffb
         {
             if (!parmName.Equals("CONDITION") && !parmName.Equals("CUSTOM_FORCE_DATA_REPORT"))
             {
+                if (parmName.Equals("SET_EFFECT"))
+                {
+                    Operational = true;
+                }
+
                 if (_structDictonary.ContainsKey(parmName))
                 {
                     _structDictonary[parmName] = parameter;

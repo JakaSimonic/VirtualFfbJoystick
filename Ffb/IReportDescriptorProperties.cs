@@ -15,5 +15,6 @@ namespace Ffb
         int MAX_DEVICE_GAIN { get; }
         long DURATION_INFINITE { get; }
         uint MAX_RAM_POOL { get; }
+        double MAX_VALUE_EFFECT { get; }
     }
 }

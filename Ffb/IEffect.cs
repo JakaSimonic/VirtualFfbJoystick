@@ -12,5 +12,6 @@ namespace Ffb
         List<double> GetForce(JOYSTICK_INPUT jostickInput);
         void TriggerButtonPressed();
         void TriggerButtonReleased();
+        bool Operational { get; }
     }
 }

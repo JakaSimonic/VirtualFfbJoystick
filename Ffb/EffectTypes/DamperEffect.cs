@@ -19,7 +19,6 @@ namespace Ffb
 
         public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
         {
-            ENVELOPE env = (ENVELOPE)structDictonary["ENVELPOPE"];
             SET_EFFECT eff = (SET_EFFECT)structDictonary["SET_EFFECT"];
             List<CONDITION> cond = (List<CONDITION>)structDictonary["CONDITION"];
 
