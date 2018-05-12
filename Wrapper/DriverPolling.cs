@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Timers;
 
 namespace VHClibWrapper
@@ -56,7 +57,7 @@ namespace VHClibWrapper
             pollTimer.Stop();
         }
 
-        private void OnPollEvent(Object source, System.Timers.ElapsedEventArgs e)
+        private void OnPollEvent(object source, System.Timers.ElapsedEventArgs e)
         {
             foreach (var dc in driverCommunication)
             {
@@ -72,6 +73,7 @@ namespace VHClibWrapper
 
                     HidEventArg hidArg = new HidEventArg(buffer, dc.HidIoctlEnum);
                     HidEvent(this, hidArg);
+                    Console.WriteLine(BitConverter.ToString(hidArg.buffer));
 
                     if (dc.DriverWrite != null)
                     {

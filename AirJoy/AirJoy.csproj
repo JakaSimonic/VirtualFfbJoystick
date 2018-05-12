@@ -55,6 +55,10 @@
       <Project>{9429d83f-d4e3-4e7c-a419-860b23bacab7}</Project>
       <Name>Ffb</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MitsubishiPlc\MitsubishiPlc.csproj">
+      <Project>{738e6903-96ab-4a1c-a93a-ff8374526776}</Project>
+      <Name>MitsubishiPlc</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Wrapper\VHClibWrapper.csproj">
       <Project>{d75fa028-b7d9-47e6-b2b9-9a651ebc0109}</Project>
       <Name>VHClibWrapper</Name>

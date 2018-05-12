@@ -1,0 +1,38 @@
+
+C:\Users\jaka\Desktop\VirtualHID>devcon stack "@ROOT\HID*"
+ROOT\HIDCLASS\0000
+    Name: vJoy Device
+    Setup Class: {745a17a0-74d3-11d0-b6fe-00a0c90f57da} HIDClass
+    Upper filters:
+        mshidkmdf
+    Controlling service:
+        vjoy
+ROOT\HIDCLASS\0001
+    Name: VirtualHID Device
+    Setup Class: {745a17a0-74d3-11d0-b6fe-00a0c90f57da} HIDClass
+    Controlling service:
+        mshidkmdf
+    Lower filters:
+        VirtualHID
+2 matching device(s) found.
+
+C:\Users\jaka\Desktop\VirtualHID>devcon findall "@ROOT\HID*"
+ROOT\HIDCLASS\0000                                          : vJoy Device
+ROOT\HIDCLASS\0001                                          : VirtualHID Device
+2 matching device(s) found.
+
+C:\Users\jaka\Desktop\VirtualHID>devcon hwids root\VirtualHID | findstr ROOT
+ROOT\HIDCLASS\0001
+
+C:\Users\jaka\Desktop\VirtualHID>
+
+C:\Users\jaka\Desktop\VirtualHID>devcon hwids root\VirtualHID | findstr ROOT > id
+
+C:\Users\jaka\Desktop\VirtualHID>FOR /F %k in (id) DO echo %k
+
+C:\Users\jaka\Desktop\VirtualHID>echo ROOT\HIDCLASS\0001
+ROOT\HIDCLASS\0001
+
+C:\Users\jaka\Desktop\VirtualHID>del id
+
+C:\Users\jaka\Desktop\VirtualHID>

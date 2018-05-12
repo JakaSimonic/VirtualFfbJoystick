@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using VHClibWrapper;
-
+using System.Linq;
+using System.Threading;
+using MitsubishiPlc;
 namespace AirJoy
 {
     internal class Program
     {
         private static FfbWrapper ffbWrapper;
+        private static McProtocol mcProtocol;
 
         private static void Main(string[] args)
         {
+            mcProtocol = new McProtocol();
+            mcProtocol.UdpConnect("192.168.33.39", 1028);
+
             ffbWrapper = new FfbWrapper();
             DriverPolling driverPoll = new DriverPolling();
             driverPoll.HidEvent += DriverPoll;
@@ -18,15 +24,17 @@ namespace AirJoy
 
             while (true)
             {
-                List<double> res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = new List<double>() { 0, 0 }, pressedButtonOffsets = new List<int>() });
-                //Console.WriteLine("{0}", res[0]);
+                List<double> joyInput = mcProtocol.ReadWordWise("D", 400, 1).Select(i => (double)i).ToList();
+                int[] res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = joyInput, pressedButtonOffsets = new List<int>() }).Select(i => (int)i).ToArray();
+                mcProtocol.WriteWordWise(res, "D", 300);
+                Console.WriteLine("{0}", res[0]);
                 System.Threading.Thread.Sleep(100);
             }
         }
 
         private static void DriverPoll(object sender, HidEventArg e)
         {
-            Console.WriteLine(BitConverter.ToString(e.buffer));
+            
             HidIoctlEnum hidIoctl = e.HidIoctlEnum;
 
             switch (hidIoctl)
