@@ -42,6 +42,7 @@ HID_REPORT_DESCRIPTOR       G_DefaultReportDescriptor[] = {
 	0x09, 0x35,                    //     USAGE (Rz)
 	0x09, 0x36,                    //     USAGE (Slider)
 	0x09, 0x37,                    //     USAGE (Dial)
+	0x09, 0x38,                    //     USAGE (Wheel)
 	0x81, 0x02,                    //     INPUT (Data,Var,Abs)
 	0xc0,                          //   END_COLLECTION
 	/***************** 128 Buttons ************************************/
