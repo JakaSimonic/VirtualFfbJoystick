@@ -411,26 +411,15 @@ namespace MitsubishiPlc
                 if (IsTcp)
                 {
                     task = Task.Run(() => TCPSendAndGetResponsePLC(buffer));
-                    task.Wait(50);
-
-                    if (task.IsCompleted != true)
-                    {
-                        TcpDisconnect();
-                    }
                 }
                 else
                 {
                     task = Task.Run(() => UDPSendAndGetResponsePLC(buffer));
-                    task.Wait(50);
-
-                    if (task.IsCompleted != true)
-                    {
-                        UdpDisconnect();
-                    }
                 }
+                task.Wait();
                 return task.Result;
             }
-            catch (AggregateException)
+            catch (AggregateException ae)
             {
                 throw;
             }
@@ -441,19 +430,42 @@ namespace MitsubishiPlc
             networkStream.Write(buffer, 0, buffer.Length);
 
             byte[] bytes = new byte[tcpClient.ReceiveBufferSize + 1];
-            await networkStream.ReadAsync(bytes, 0, tcpClient.ReceiveBufferSize);
-
-            return bytes;
+            Task task = networkStream.ReadAsync(bytes, 0, tcpClient.ReceiveBufferSize);
+            var completedTask = await Task.WhenAny(task, Task.Delay(250));
+            if (completedTask == task)
+            {
+                Console.WriteLine("prejeto");
+                return bytes;
+            }
+            else
+            {
+                byte[] fakeResponse = new byte[10];
+                fakeResponse[9] = 4; //this hack will trigger an error 
+                return fakeResponse;
+            }
         }
 
         private async Task<byte[]> UDPSendAndGetResponsePLC(byte[] buffer)
         {
             // send data
+            Console.WriteLine("posiljam");
             udpClient.Send(buffer, buffer.Length);
 
+            Console.WriteLine("poslussam");
             // then receive data
-            UdpReceiveResult task = await udpClient.ReceiveAsync();
-            return task.Buffer;
+            Task<UdpReceiveResult> task = udpClient.ReceiveAsync();
+            var completedTask = await Task.WhenAny(task, Task.Delay(250));
+            if (completedTask == task)
+            {
+                Console.WriteLine("prejeto");
+                return task.Result.Buffer;
+            }
+            else
+            {
+                byte[] fakeResponse = new byte[10];
+                fakeResponse[9] = 4; //this hack will trigger an error 
+                return fakeResponse;
+            }
         }
 
         #endregion NetworkFunc
