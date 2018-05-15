@@ -6,7 +6,7 @@ namespace VHClibWrapper
 {
     public class DriverPolling : IDisposable
     {
-        private DriverCommunication[] driverCommunication;
+        private ReactTable[] reactTable;
         private Timer pollTimer;
         private bool disposed = false;
 
@@ -29,7 +29,7 @@ namespace VHClibWrapper
                 throw new Exception("Driver test failed!");
             }
 
-            driverCommunication = MapDriverCommunication();
+            reactTable = CreateReactTable();
         }
 
         ~DriverPolling()
@@ -59,9 +59,9 @@ namespace VHClibWrapper
 
         private void OnPollEvent(object source, System.Timers.ElapsedEventArgs e)
         {
-            foreach (var dc in driverCommunication)
+            foreach (var re in reactTable)
             {
-                byte[] buffer = dc.DriverRead();
+                byte[] buffer = re.DriverRead();
 
                 if (buffer == null)
                 {
@@ -71,15 +71,15 @@ namespace VHClibWrapper
                 {
                     int returnedBytes = buffer.Length;
 
-                    HidEventArg hidArg = new HidEventArg(buffer, dc.HidIoctlEnum);
+                    HidEventArg hidArg = new HidEventArg(buffer, re.HidIoctlEnum);
                     HidEvent(this, hidArg);
                     Console.WriteLine(BitConverter.ToString(hidArg.buffer));
 
-                    if (dc.DriverWrite != null)
+                    if (re.DriverWrite != null)
                     {
                         if (returnedBytes == hidArg.buffer.Length)
                         {
-                            dc.DriverWrite(hidArg.buffer);
+                            re.DriverWrite(hidArg.buffer);
                         }
                         else
                         {
@@ -119,21 +119,21 @@ namespace VHClibWrapper
             GC.SuppressFinalize(this);
         }
 
-        private DriverCommunication[] MapDriverCommunication()
+        private ReactTable[] CreateReactTable()
         {
-            return new DriverCommunication[]
+            return new ReactTable[]
             {
-                new DriverCommunication(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
-                new DriverCommunication(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
-                new DriverCommunication(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
-                new DriverCommunication(NativeMethods.Read_GetInputReportQueue, NativeMethods.Write_GetInputReportQueue, HidIoctlEnum.GetInputReport),
-                new DriverCommunication(NativeMethods.Read_SetOutputReportQueue, null, HidIoctlEnum.SetOutputReport)
+                new ReactTable(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
+                new ReactTable(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
+                new ReactTable(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
+                new ReactTable(NativeMethods.Read_GetInputReportQueue, NativeMethods.Write_GetInputReportQueue, HidIoctlEnum.GetInputReport),
+                new ReactTable(NativeMethods.Read_SetOutputReportQueue, null, HidIoctlEnum.SetOutputReport)
             };
         }
 
-        private class DriverCommunication
+        private class ReactTable
         {
-            internal DriverCommunication(Func<byte[]> _DriverRead, Action<byte[]> _DriverWrite, HidIoctlEnum _HidIoctlEnum)
+            internal ReactTable(Func<byte[]> _DriverRead, Action<byte[]> _DriverWrite, HidIoctlEnum _HidIoctlEnum)
             {
                 DriverRead = _DriverRead;
                 DriverWrite = _DriverWrite;
