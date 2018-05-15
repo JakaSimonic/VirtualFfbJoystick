@@ -95,8 +95,16 @@ namespace Ffb
                 if (_structDictonary.ContainsKey(parmName))
                 {
                     List<CONDITION> conditionList = (List<CONDITION>)_structDictonary[parmName];
-                    conditionList.Add((CONDITION)parameter);
-                    _structDictonary[parmName] = conditionList;
+                    int index = ((CONDITION)parameter).blockOffset;
+                    if (conditionList.Count > index)
+                    {
+                        conditionList[index] = (CONDITION)parameter;
+                    }
+                    else
+                    {
+                        conditionList.Add((CONDITION)parameter);
+                        //_structDictonary[parmName] = conditionList;
+                    }
                 }
                 else
                 {

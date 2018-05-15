@@ -139,6 +139,7 @@ namespace vHidService
             return new CONDITION
             {
                 effectBlockIndex = buffer[1],
+                blockOffset = buffer[2],
                 cpOffset = BitConverter.ToInt16(buffer, 3),
                 positiveCoefficient = BitConverter.ToInt16(buffer, 5),
                 negativeCoefficient = BitConverter.ToInt16(buffer, 7),

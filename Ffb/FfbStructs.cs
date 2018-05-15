@@ -5,6 +5,7 @@ namespace Ffb
     public struct CONDITION
     {
         public int effectBlockIndex;
+        public int blockOffset;
         public int deadBand;
         public int cpOffset;
         public int negativeSaturation;
