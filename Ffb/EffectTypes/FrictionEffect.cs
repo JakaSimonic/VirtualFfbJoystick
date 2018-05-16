@@ -31,7 +31,7 @@ namespace Ffb
 
             previousAxesPositions = joystickInput.axesPositions;
 
-            return forces;
+            return forces.Select(x => _calculationProvider.ApplyGain(x, eff.gain)).ToList();
         }
     }
 }

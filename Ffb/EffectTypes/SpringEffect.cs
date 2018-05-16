@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Ffb
 {
@@ -17,7 +18,7 @@ namespace Ffb
             List<CONDITION> cond = (List<CONDITION>)structDictonary["CONDITION"];
 
             List<double> forces = _calculationProvider.GetCondition(cond, joystickInput.axesPositions);
-            return forces;
+            return forces.Select(x => _calculationProvider.ApplyGain(x, eff.gain)).ToList();
         }
     }
 }
