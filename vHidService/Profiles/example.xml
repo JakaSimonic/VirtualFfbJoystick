@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManualConditionEffects xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <spring>
+    <enabled>false</enabled>
+    <coefficient>0</coefficient>
+    <deadBand>0</deadBand>
+  </spring>
+  <damper>
+    <enabled>false</enabled>
+    <coefficient>0</coefficient>
+    <deadBand>0</deadBand>
+  </damper>
+  <inertia>
+    <enabled>false</enabled>
+    <coefficient>0</coefficient>
+    <deadBand>0</deadBand>
+  </inertia>
+  <friction>
+    <enabled>false</enabled>
+    <coefficient>0</coefficient>
+    <deadBand>0</deadBand>
+  </friction>
+  <limit>
+    <enabled>false</enabled>
+    <cpOfffset>0</cpOfffset>
+  </limit>
+  <gain>0</gain>
+</ManualConditionEffects>

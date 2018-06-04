@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <plc>
+    <ipaddress>192.168.33.39</ipaddress>
+    <port>1028</port>
+    <pollPeriod>30</pollPeriod>
+  </plc>
+  <driver>
+    <pollPeriod>30</pollPeriod>
+  </driver>
+</Settings>
