@@ -419,7 +419,7 @@ namespace MitsubishiPlc
                 task.Wait();
                 return task.Result;
             }
-            catch (AggregateException ae)
+            catch (AggregateException)
             {
                 throw;
             }
@@ -434,12 +434,11 @@ namespace MitsubishiPlc
             var completedTask = await Task.WhenAny(task, Task.Delay(250));
             if (completedTask == task)
             {
-                Console.WriteLine("prejeto");
                 return bytes;
             }
             else
             {
-                byte[] fakeResponse = new byte[10];
+                byte[] fakeResponse = new byte[11];
                 fakeResponse[9] = 4; //this hack will trigger an error 
                 return fakeResponse;
             }
@@ -448,21 +447,18 @@ namespace MitsubishiPlc
         private async Task<byte[]> UDPSendAndGetResponsePLC(byte[] buffer)
         {
             // send data
-            Console.WriteLine("posiljam");
             udpClient.Send(buffer, buffer.Length);
 
-            Console.WriteLine("poslussam");
             // then receive data
             Task<UdpReceiveResult> task = udpClient.ReceiveAsync();
             var completedTask = await Task.WhenAny(task, Task.Delay(250));
             if (completedTask == task)
             {
-                Console.WriteLine("prejeto");
                 return task.Result.Buffer;
             }
             else
             {
-                byte[] fakeResponse = new byte[10];
+                byte[] fakeResponse = new byte[11];
                 fakeResponse[9] = 4; //this hack will trigger an error 
                 return fakeResponse;
             }
