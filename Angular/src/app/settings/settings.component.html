@@ -1,0 +1,31 @@
+<mat-card class="example-card">
+  <mat-card-header>
+    <mat-card-title>Plc</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field class="example-form-field">
+      <input matInput type="text" onclick="this.focus();this.select()" placeholder="IP address" [(ngModel)]="settings.plc.ipaddress" />
+    </mat-form-field>
+    <mat-form-field class="example-form-field">
+      <input matInput type="text" onclick="this.focus();this.select()" placeholder="Port" [(ngModel)]="settings.plc.port" />
+    </mat-form-field>
+    <mat-form-field class="example-form-field">
+      <input matInput type="text" onclick="this.focus();this.select()" placeholder="Poll period" [(ngModel)]="settings.plc.pollPeriod" />
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+<mat-card class="example-card">
+  <mat-card-header>
+    <mat-card-title>Driver</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field class="example-form-field">
+      <input matInput type="text" onclick="this.focus();this.select()" placeholder="Poll period" [(ngModel)]="settings.driver.pollPeriod" />
+    </mat-form-field>
+  </mat-card-content>
+</mat-card>
+<mat-card class="example-card">
+  <mat-card-content>
+    <button mat-raised-button (click)="onSave()">Save</button>
+  </mat-card-content>
+</mat-card>

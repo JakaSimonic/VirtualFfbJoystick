@@ -1,0 +1,74 @@
+<mat-form-field>
+  <mat-select [(ngModel)]="selected" (ngModelChange)="selectionChanged($event)">
+    <mat-option *ngFor="let item of effectProfiles" [value]="item">{{item}}</mat-option>
+  </mat-select>
+</mat-form-field>
+ <div class="example-card" layout="row" layout-align="center center">
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <h2>Spring</h2>
+        <mat-slide-toggle [(ngModel)]="effect.spring.enabled">Enable</mat-slide-toggle><br><br> Coefficient
+        <br>
+        <mat-slider [min]="coefficientMin" [max]="coefficientMax" [(ngModel)]="effect.spring.coefficient">Coefficient</mat-slider><br> Deadband
+        <br>
+        <mat-slider [min]="deadbandMin" [max]="deadbandMax" [(ngModel)]="effect.spring.deadBand">Deadband</mat-slider>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <h2>Friction</h2>
+        <mat-slide-toggle [(ngModel)]=effect.friction.enabled>Enable</mat-slide-toggle><br><br> Coefficient
+        <br>
+        <mat-slider [min]="coefficientMin" [max]="coefficientMax" [(ngModel)]="effect.friction.coefficient">Coefficient</mat-slider><br> Deadband
+        <br>
+        <mat-slider [min]="deadbandMin" [max]="deadbandMax" [(ngModel)]="effect.friction.deadBand">Deadband</mat-slider>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <h2>Damper</h2>
+        <mat-slide-toggle [(ngModel)]=effect.damper.enabled>Enable</mat-slide-toggle><br><br> Coefficient
+        <br>
+        <mat-slider [min]="coefficientMin" [max]="coefficientMax" [(ngModel)]="effect.damper.coefficient">Coefficient</mat-slider><br> Deadband
+        <br>
+        <mat-slider [min]="deadbandMin" [max]="deadbandMax" [(ngModel)]="effect.damper.deadBand">Deadband</mat-slider>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <h2>Inertia</h2>
+        <mat-slide-toggle [(ngModel)]=effect.inertia.enabled>Enable</mat-slide-toggle><br><br> Coefficient
+        <br>
+        <mat-slider [min]="coefficientMin" [max]="coefficientMax" [(ngModel)]="effect.inertia.coefficient">Coefficient</mat-slider><br> Deadband
+        <br>
+        <mat-slider [min]="deadbandMin" [max]="deadbandMax" [(ngModel)]="effect.inertia.deadBand">Deadband</mat-slider>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <h2>Movement limit</h2>
+        <mat-slide-toggle [(ngModel)]=effect.limit.enabled>Enable</mat-slide-toggle><br><br>
+        <mat-form-field class="example-form-field">
+          <input matInput type="text" onclick="this.focus();this.select()" placeholder="Limit [degrees]" [(ngModel)]="effect.limit.cpOfffset" />
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div>
+    <mat-card class="example-card" style="width:20%">
+      <mat-card-content>
+        <input matInput type="text" onclick="this.focus();this.select()" placeholder="File name" [(ngModel)]="selected" />
+        <button mat-button (click)="saveEffect()">Save</button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
