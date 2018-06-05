@@ -6,10 +6,10 @@ namespace Ffb
     {
         public int effectBlockIndex;
         public int blockOffset;
-        public int deadBand;
+        public double deadBand;
         public int cpOffset;
-        public int negativeSaturation;
-        public int positiveSaturation;
+        public double negativeSaturation;
+        public double positiveSaturation;
         public int negativeCoefficient;
         public int positiveCoefficient;
     }
@@ -17,15 +17,15 @@ namespace Ffb
     public struct CONSTANT
     {
         public int effectBlockIndex;
-        public int magnitude;
+        public double magnitude;
     }
 
     public struct ENVELOPE
     {
         public int effectBlockIndex;
-        public int attackLevel;
+        public double attackLevel;
         public int attackTime;
-        public int fadeLevel;
+        public double fadeLevel;
         public int fadeTime;
     }
 
@@ -39,8 +39,8 @@ namespace Ffb
     public struct PERIOD
     {
         public int effectBlockIndex;
-        public int magnitude;
-        public int offset;
+        public double magnitude;
+        public double offset;
         public int period;
         public int phase;
     }
@@ -48,20 +48,20 @@ namespace Ffb
     public struct RAMP
     {
         public int effectBlockIndex;
-        public int end;
-        public int start;
+        public double end;
+        public double start;
     }
 
     public struct SET_EFFECT
     {
         public int effectBlockIndex;
         public long duration;
-        public int gain;
+        public double gain;
         public long samplePeriod;
         public int trigerButton;
         public long triggerRepeatInterval;
-        public int directionX;
-        public int directionY;
+        public double directionX;
+        public double directionY;
         public bool polar;
         public List<bool> axisEnabled;
         public EFFECT_TYPE effetType;

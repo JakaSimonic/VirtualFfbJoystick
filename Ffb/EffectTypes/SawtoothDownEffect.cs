@@ -6,12 +6,10 @@ namespace Ffb
     internal class SawtoothDownEffect : IEffectType
     {
         private readonly ICalculationProvider _calculationProvider;
-        private readonly IReportDescriptorProperties _reportDescriptorProperties;
 
-        public SawtoothDownEffect(ICalculationProvider calculationProvider, IReportDescriptorProperties reportDescriptorProperties)
+        public SawtoothDownEffect(ICalculationProvider calculationProvider)
         {
             _calculationProvider = calculationProvider;
-            _reportDescriptorProperties = reportDescriptorProperties;
         }
 
         public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
@@ -30,23 +28,13 @@ namespace Ffb
 
             double max = offset + magnitude;
             double min = offset - magnitude;
-            double phasetime = (phase * period) / _reportDescriptorProperties.MAX_PHASE;
+            double phasetime = (phase * period);
             double time = elapsedTime + phasetime;
             double reminder = time % period;
             double slope = (max - min) / period;
             double tempforce = 0;
             tempforce = slope * reminder;
             tempforce += min;
-
-            double maxValue = _reportDescriptorProperties.MAX_VALUE_EFFECT;
-            if (tempforce < -maxValue)
-            {
-                tempforce = -maxValue;
-            }
-            if (tempforce > maxValue)
-            {
-                tempforce = maxValue;
-            }
 
             double envelope = _calculationProvider.ApplyGain(_calculationProvider.GetEnvelope(env, elapsedTime, eff.duration), eff.gain);
 

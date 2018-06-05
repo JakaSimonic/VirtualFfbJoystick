@@ -20,12 +20,17 @@ namespace Ffb
 
             List<double> forces = new List<double>();
             List<int> samples = customForceDataReport.samples;
-            double sampleCount = customForceParameter.sampleCount;
+            int sampleCount = customForceParameter.sampleCount;
             double period = customForceParameter.samplePeriod;
             List<double> directions = _calculationProvider.GetDirection(eff);
 
             int sampleNormalized = (int)Math.Round((elapsedTime / period) * sampleCount);
-            int index = _calculationProvider.GetCustomEffectSampleIndex(sampleNormalized, samples.Count);
+
+            if (sampleNormalized > sampleCount)
+            {
+                sampleNormalized %= sampleCount;
+            }
+            int index = sampleNormalized * directions.Count;
 
             foreach (var direction in directions)
             {

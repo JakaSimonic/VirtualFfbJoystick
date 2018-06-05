@@ -8,6 +8,7 @@ namespace vHidService
     public class FfbWrapper
     {
         private FfbEngine _ffbEngine;
+        private IReportDescriptorProperties reportDescriptorProperties = new ReportDescriptorProperties();
         private Dictionary<int, EFFECT_OPERATION> EffectOperationMapper;
         private Dictionary<int, EFFECT_TYPE> EffectTypeMapper;
         private Dictionary<int, SetInvoke> FfbWriteReportTypeMapper;
@@ -17,7 +18,7 @@ namespace vHidService
 
         public FfbWrapper()
         {
-            _ffbEngine = (new FfbEngineFactory(new ReportDescriptorProoperties())).Create();
+            _ffbEngine = (new FfbEngineFactory(reportDescriptorProperties)).Create();
 
             EffectOperationMapper = new Dictionary<int, EFFECT_OPERATION>()
             {
@@ -143,9 +144,9 @@ namespace vHidService
                 cpOffset = BitConverter.ToInt16(buffer, 3),
                 positiveCoefficient = BitConverter.ToInt16(buffer, 5),
                 negativeCoefficient = BitConverter.ToInt16(buffer, 7),
-                positiveSaturation = buffer[9],
-                negativeSaturation = buffer[10],
-                deadBand = buffer[11],
+                positiveSaturation = buffer[9] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                negativeSaturation = buffer[10] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                deadBand = buffer[11] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
             };
         }
 
@@ -154,7 +155,7 @@ namespace vHidService
             return new CONSTANT
             {
                 effectBlockIndex = buffer[1],
-                magnitude = BitConverter.ToUInt16(buffer, 2)
+                magnitude = BitConverter.ToUInt16(buffer, 2) / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
             };
         }
 
@@ -163,9 +164,9 @@ namespace vHidService
             return new ENVELOPE
             {
                 effectBlockIndex = buffer[1],
-                attackLevel = buffer[2],
+                attackLevel = buffer[2] / reportDescriptorProperties.MAX_GAIN,
                 attackTime = BitConverter.ToUInt16(buffer, 4),
-                fadeLevel = buffer[3],
+                fadeLevel = buffer[3] / reportDescriptorProperties.MAX_GAIN,
                 fadeTime = BitConverter.ToUInt16(buffer, 6)
             };
         }
@@ -185,8 +186,8 @@ namespace vHidService
             return new PERIOD
             {
                 effectBlockIndex = buffer[1],
-                magnitude = buffer[2],
-                offset = (sbyte)buffer[3] * 2,
+                magnitude = buffer[2] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                offset = (sbyte)buffer[3] / reportDescriptorProperties.MAXIMUM_SIGNED * reportDescriptorProperties.PHYSICAL_MAXIMUM,
                 phase = buffer[4],
                 period = BitConverter.ToUInt16(buffer, 5),
             };
@@ -197,8 +198,8 @@ namespace vHidService
             return new RAMP
             {
                 effectBlockIndex = buffer[1],
-                end = (sbyte)buffer[3] * 2,
-                start = (sbyte)buffer[2] * 2
+                end = (sbyte)buffer[3] / reportDescriptorProperties.MAXIMUM_SIGNED * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                start = (sbyte)buffer[2] / reportDescriptorProperties.MAXIMUM_SIGNED * reportDescriptorProperties.PHYSICAL_MAXIMUM
             };
         }
 
@@ -211,12 +212,12 @@ namespace vHidService
                 duration = BitConverter.ToUInt16(buffer, 3),
                 triggerRepeatInterval = BitConverter.ToUInt16(buffer, 5),
                 samplePeriod = BitConverter.ToUInt16(buffer, 7),
-                gain = buffer[9],
+                gain = buffer[9] * reportDescriptorProperties.PHYSICAL_MAXIMUM / reportDescriptorProperties.MAX_GAIN,
                 trigerButton = buffer[10],
                 axisEnabled = new List<bool>() { ((buffer[11] & 1) != 0), (((buffer[11] >> 1) & 1) != 0) },
                 polar = (((buffer[11] >> 2) & 1) != 0),
-                directionX = (sbyte)buffer[12],
-                directionY = (sbyte)buffer[13],
+                directionX = (sbyte)buffer[12] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM_ROTATION,
+                directionY = (sbyte)buffer[13] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM_ROTATION,
                 startDelay = BitConverter.ToUInt16(buffer, 14)
             };
         }
@@ -241,7 +242,7 @@ namespace vHidService
         {
             return new DEVICE_GAIN
             {
-                deviceGain = buffer[1]
+                deviceGain = buffer[1] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
             };
         }
 
@@ -286,7 +287,7 @@ namespace vHidService
             return new CUSTOM_FORCE_DATA_REPORT
             {
                 effectBlockIndex = buffer[1],
-                samples = buffer.Skip(4).Select(x => (int)(sbyte)x).ToList()
+                samples = buffer.Skip(4).Select(x => (sbyte)x + 127).ToList()
             };
         }
 
@@ -300,7 +301,7 @@ namespace vHidService
             };
         }
 
-        internal class ReportDescriptorProoperties : IReportDescriptorProperties
+        private class ReportDescriptorProperties : IReportDescriptorProperties
         {
             public double MAX_GAIN { get; private set; }
             public double ENVELOPE_MAX { get; private set; }
@@ -314,8 +315,11 @@ namespace vHidService
             public long DURATION_INFINITE { get; }
 
             public double MAX_VALUE_EFFECT { get; }
+            public double PHYSICAL_MAXIMUM { get; }
+            public double PHYSICAL_MAXIMUM_ROTATION { get; }
+            public double MAXIMUM_SIGNED { get; }
 
-            public ReportDescriptorProoperties()
+            public ReportDescriptorProperties()
             {
                 DIRECTION_MAX = 255d;
 
@@ -323,7 +327,7 @@ namespace vHidService
 
                 DURATION_INFINITE = -1;
 
-                ENVELOPE_MAX = 255d;
+                ENVELOPE_MAX = 10000;
 
                 FREE_ALL_EFFECTS = 0xFF;
 
@@ -338,6 +342,11 @@ namespace vHidService
                 MAX_RAM_POOL = 0xFFFF;
 
                 MAX_VALUE_EFFECT = 255;
+
+                PHYSICAL_MAXIMUM = 10000;
+
+                PHYSICAL_MAXIMUM_ROTATION = 360;
+                MAXIMUM_SIGNED = 127;
             }
         }
 

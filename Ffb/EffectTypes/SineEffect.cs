@@ -6,12 +6,10 @@ namespace Ffb
     internal class SineEffect : IEffectType
     {
         private readonly ICalculationProvider _calculationProvider;
-        private readonly IReportDescriptorProperties _reportDescriptorProperties;
 
-        public SineEffect(ICalculationProvider calculationProvider, IReportDescriptorProperties reportDescriptorProperties)
+        public SineEffect(ICalculationProvider calculationProvider)
         {
             _calculationProvider = calculationProvider;
-            _reportDescriptorProperties = reportDescriptorProperties;
         }
 
         public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
@@ -28,20 +26,10 @@ namespace Ffb
 
             magnitude = _calculationProvider.ApplyGain(magnitude, eff.gain);
 
-            double angle = ((elapsedTime / period) + (phase / _reportDescriptorProperties.MAX_PHASE) * period) * 2 * Math.PI;
+            double angle = ((elapsedTime / period) + (phase) * period) * 2 * Math.PI;
             double sine = Math.Sin(angle);
             double tempforce = sine * magnitude;
             tempforce += offset;
-
-            double maxValue = _reportDescriptorProperties.MAX_VALUE_EFFECT;
-            if (tempforce < -maxValue)
-            {
-                tempforce = -maxValue;
-            }
-            if (tempforce > maxValue)
-            {
-                tempforce = maxValue;
-            }
 
             double envelope = _calculationProvider.ApplyGain(_calculationProvider.GetEnvelope(env, elapsedTime, eff.duration), eff.gain);
 

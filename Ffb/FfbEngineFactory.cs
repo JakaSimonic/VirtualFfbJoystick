@@ -6,11 +6,10 @@ namespace Ffb
     public  class FfbEngineFactory
     {
         private FfbEngineLogic _ffbLogic;
-        private EffectsContainer _effectsContainer;
 
         public FfbEngineFactory(IReportDescriptorProperties reportDescriptorProperties)
         {
-            TinyIoCContainer.Current.Register<ICalculationProvider>(new CalculationProvider(reportDescriptorProperties));
+            TinyIoCContainer.Current.Register<ICalculationProvider>(new CalculationProvider());
             _ffbLogic = new FfbEngineLogic(reportDescriptorProperties);
         }
 

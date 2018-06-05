@@ -6,19 +6,12 @@ namespace Ffb
 {
     internal class CalculationProvider : ICalculationProvider
     {
-        private IReportDescriptorProperties _reportDescriptorProperties;
-
-        const double TO_RAD = (360d / 255d) * (Math.PI / 180d);
-        const double HALF_PI = Math.PI / 2;
-
-        public CalculationProvider(IReportDescriptorProperties reportDescriptorProperties)
-        {
-            _reportDescriptorProperties = reportDescriptorProperties;
-        }
+        private const double TO_RAD = (Math.PI / 180d);
+        private const double HALF_PI = Math.PI / 2;
 
         public double ApplyGain(double value, double gain)
         {
-            return ((value * gain) / _reportDescriptorProperties.MAX_GAIN);
+            return (value * gain);
         }
 
         public double GetEnvelope(ENVELOPE envParms, double elapsedTime, double duration)
@@ -31,13 +24,13 @@ namespace Ffb
 
             if (elapsedTime < attackTime)
             {
-                double attackSlope = (_reportDescriptorProperties.ENVELOPE_MAX - attackLevel) / attackTime;
-                envelope = (attackLevel + (attackSlope * elapsedTime)) / _reportDescriptorProperties.ENVELOPE_MAX;
+                double attackSlope = (1 - attackLevel) / attackTime;
+                envelope = (attackLevel + (attackSlope * elapsedTime));
             }
             if (elapsedTime > (duration - fadeTime))
             {
-                double fadeSlope = (_reportDescriptorProperties.ENVELOPE_MAX - fadeLevel) / fadeTime;
-                envelope = (fadeLevel + (fadeSlope * (duration - elapsedTime))) / _reportDescriptorProperties.ENVELOPE_MAX;
+                double fadeSlope = (1 - fadeLevel) / fadeTime;
+                envelope = (fadeLevel + (fadeSlope * (duration - elapsedTime)));
             }
 
             return envelope;
@@ -59,9 +52,7 @@ namespace Ffb
             }
             else
             {
-                double x = directionX / _reportDescriptorProperties.DIRECTION_MAX;
-                double y = directionY / _reportDescriptorProperties.DIRECTION_MAX;
-                angle = Math.Atan2(y, x) + HALF_PI;
+                angle = Math.Atan2(directionY, directionX) + HALF_PI;
 
                 axes.Add(Math.Cos(angle));
                 axes.Add(Math.Sin(angle));
@@ -131,17 +122,6 @@ namespace Ffb
             }
 
             return axisForces;
-        }
-
-        public int GetCustomEffectSampleIndex(int sample, int sampleCount)
-        {
-            if (sample > sampleCount)
-            {
-                sample %= sampleCount;
-            }
-
-            //samples are interleaved
-            return sample * _reportDescriptorProperties.DOWNLOAD_FORCE_SAMPLE_AXES;
         }
     }
 }
