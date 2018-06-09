@@ -18,9 +18,9 @@ namespace vHidService
                 {
                     byte[] stream = line.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     if (counter++ % 4 == 0)
-                        ffbWrapper.SetFeature(stream);
+                        _ffbWrapper.SetFeature(stream);
                     else
-                        ffbWrapper.WriteReport(stream);
+                        _ffbWrapper.WriteReport(stream);
                 }
             }
         }

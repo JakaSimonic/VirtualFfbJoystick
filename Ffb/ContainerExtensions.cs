@@ -6,7 +6,7 @@ namespace Ffb
     {
         public static IEffect GetEffect(this List<IEffect> effectsList, int effectBlockIndex)
         {
-            return effectsList[effectBlockIndex - 1];
+            return effectsList[effectBlockIndex - 1];            
         }
 
         public static void InsertEffect(this List<IEffect> effectsList, int effectBlockIndex, IEffect effect)

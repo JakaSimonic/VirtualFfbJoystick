@@ -1,26 +1,31 @@
-﻿using MitsubishiPlc;
+﻿using Microsoft.AspNet.SignalR;
+using Microsoft.AspNet.SignalR.Hubs;
+using MitsubishiPlc;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Xml.Serialization;
 using Topshelf;
 using VHClibWrapper;
-using System.Timers;
 
 namespace vHidService
 {
-    public class VhidService : ServiceControl
+    public class VhidService 
     {
         private System.Timers.Timer timerPlc;
+        private System.Timers.Timer timerWebUpdate;
+        private System.Timers.Timer timerPlcConnectionMonitor;
 
-        private static FfbWrapper ffbWrapper;
-        private static McProtocol mcProtocol=new McProtocol();
+        private static FfbWrapper ffbWrapper = new FfbWrapper();
+        private static FfbWrapper manualFfbWrapper;
+        private static ManualFfb manualFfb;
+        private static McProtocol mcProtocol = new McProtocol();
         private static DriverPolling driverPolling;
-
-        private Settings settings;
+        IHubConnectionContext<dynamic> Clients;
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private IDisposable _webApplication;
+        bool webUpdate = false;
 
         public VhidService()
         {
@@ -29,7 +34,7 @@ namespace vHidService
                 InitSettings();
                 InitFfb();
                 InitDriver();
-                InitPlc();
+                InitTimers();
             }
             catch (Exception ex)
             {
@@ -37,14 +42,24 @@ namespace vHidService
             }
         }
 
-        public bool Start(HostControl hostControl)
-        {
+        public bool Start()
+        {            
+            driverPolling.StartPolling(Context.Settings.driver.pollPeriod);
+            timerPlc.Start();
+            timerPlcConnectionMonitor.Start();
+            //timerWebUpdate.Start();
+            //_webApplication=Microsoft.Owin.Hosting.WebApp.Start<WebStartup>(url: "http://localhost:7331/");
+            //Clients = GlobalHost.ConnectionManager.GetHubContext<FfbHub>().Clients;
             Console.WriteLine("Service started");
             return true;
         }
 
-        public bool Stop(HostControl hostControl)
+        public bool Stop()
         {
+            timerPlc.Stop();
+            driverPolling.Dispose();
+            _webApplication.Dispose();
+            mcProtocol.Dispose();
             Console.WriteLine("Service stopped");
             return true;
         }
@@ -54,40 +69,114 @@ namespace vHidService
             XmlSerializer deserializer = new XmlSerializer(typeof(Settings));
             TextReader reader = new StreamReader(@"settings.xml");
             object obj = deserializer.Deserialize(reader);
-            settings = (Settings)obj;
+            Context.Settings = (Settings)obj;
             reader.Close();
         }
 
-        private void InitPlc()
+        private void InitTimers()
         {
-
             timerPlc = new System.Timers.Timer();
-            timerPlc.Interval = settings.plc.pollPeriod;
+            timerPlc.Interval = Context.Settings.plc.pollPeriod;
 
-            // Hook up the Elapsed event for the timer.
             timerPlc.Elapsed += PlcCB;
 
-            // Have the timer fire repeated events (true is the default)
             timerPlc.AutoReset = true;
 
-            // Start the timer
-            timerPlc.Start();
+            timerWebUpdate = new System.Timers.Timer();
+            timerWebUpdate.Interval = 1000;
 
-            
+            timerWebUpdate.Elapsed += (sender, e) => { webUpdate = true; };
+
+            timerWebUpdate.AutoReset = true;
+
+            timerPlcConnectionMonitor = new System.Timers.Timer();
+            timerPlcConnectionMonitor.Interval = 1000;
+
+            timerPlcConnectionMonitor.Elapsed += PlcConnectionMonitor;
+
+            timerPlcConnectionMonitor.AutoReset = true;
         }
 
-        void PlcCB(object sender, System.Timers.ElapsedEventArgs e)
+        private void PlcCB(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if(!mcProtocol.UdpConnected)
+            if (mcProtocol.UdpConnected)
             {
-                mcProtocol.UdpConnect(settings.plc.ipaddress, settings.plc.port);
-            }
-            List<double> joyInput = mcProtocol.ReadWordWise("D", 400, 1).Select(i => (double)(short)i).ToList();
-            int[] res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = joyInput, pressedButtonOffsets = new List<int>() }).Select(i => (int)i).ToArray();
-            mcProtocol.WriteWordWise(res, "D", 300);
-            Console.WriteLine("{0}", res[0]);
+                try
+                {
+                    timerPlc.Enabled = false;
 
+                    List<short> joyInput = mcProtocol.ReadWordWise("D", 400, 1).Select(i => (short)i).ToList();
+                    byte[] buffer = new byte[35];
+                    buffer[0] = 1;
+                    buffer[1] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[2] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    /*                   
+                    buffer[3] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[4] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[5] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[6] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[7] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[8] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[9] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[11] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[12] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[13] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[14] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[16] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[17] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[18] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[19] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[20] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[21] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[22] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[23] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[24] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[26] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[27] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[28] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[29] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[30] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[31] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[32] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[33] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[34] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[36] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[37] = Convert.ToByte(joyInput[0] & 0xFF);
+                    buffer[38] = Convert.ToByte(joyInput[0] >> 8 & 0xFF);
+                    buffer[39] = Convert.ToByte(joyInput[0] & 0xFF);
+                    */
+                    driverPolling.SendReadReport(buffer);
+
+                    List<double> ffbInput=joyInput.Select(i => (double)i).ToList();
+                    List<int> res = ffbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = ffbInput, pressedButtonOffsets = new List<int>() }).Select(i => (int)i).ToList();
+                    List<int> resMan = manualFfbWrapper.GetForces(new Ffb.JOYSTICK_INPUT { axesPositions = ffbInput, pressedButtonOffsets = new List<int>() }).Select(i => (int)i).ToList();
+                    int torque = res.Zip(resMan, (u, z) => u + z).ToArray()[0];
+
+                    mcProtocol.WriteWordWise(new int[] { torque }, "D", 300);
+                    Console.WriteLine("{0}    {1}", torque, joyInput[0]);
+
+                    if (webUpdate)
+                    {
+                        Clients.All.sendToAll(new MonitorData { wheelPosition = (int)joyInput[0], torque = res[0] });
+                    }
+                }
+                catch (Exception exc)
+                {
+                    logger.Error(exc.ToString());
+                    mcProtocol.UdpDisconnect();
+                }
+                timerPlc.Enabled = true;
+
+            }
         }
+        private void PlcConnectionMonitor(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (!mcProtocol.UdpConnected)
+            {
+                mcProtocol.UdpConnect(Context.Settings.plc.ipaddress, Context.Settings.plc.port);
+            }
+        }
+
         static public void Serialize(Settings details)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Settings));
@@ -99,19 +188,18 @@ namespace vHidService
 
         private void InitFfb()
         {
-            ffbWrapper = new FfbWrapper();
+            manualFfbWrapper = new FfbWrapper();
+            manualFfb = new ManualFfb(manualFfbWrapper);
         }
 
         private void InitDriver()
         {
             driverPolling = new DriverPolling();
             driverPolling.HidEvent += DriverPoll;
-            driverPolling.StartPolling(settings.driver.pollPeriod);
         }
 
         private static void DriverPoll(object sender, HidEventArg e)
         {
-
             HidIoctlEnum hidIoctl = e.HidIoctlEnum;
 
             switch (hidIoctl)
@@ -134,6 +222,5 @@ namespace vHidService
                     throw new ArgumentOutOfRangeException();
             }
         }
-
     }
 }

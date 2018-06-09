@@ -30,6 +30,10 @@ Environment:
 #define READ_REPORT_MIN_SIZE 3
 #define GET_REQUEST_MINIMAL_SIZE 2
 
+EVT_WDF_DEVICE_FILE_CREATE EvtDeviceFileCreate;
+EVT_WDF_FILE_CLOSE EvtFileClose; 
+
+
 NTSTATUS CompleteReadRequest(
 	WDFREQUEST* Request,
 	WDFQUEUE*	Queue
@@ -377,6 +381,7 @@ Return Value:
 	WDFDEVICE                   hChild = NULL;
 	WDF_OBJECT_ATTRIBUTES       pdoAttributes;
 	WDF_DEVICE_PNP_CAPABILITIES pnpCaps;
+	WDF_FILEOBJECT_CONFIG       fileConfig;
 	WDF_IO_QUEUE_CONFIG         ioQueueConfig;
 	WDFQUEUE                    queue;
 	WDF_DEVICE_STATE            deviceState;
@@ -500,11 +505,16 @@ Return Value:
 	//
 	WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&pdoAttributes, RPDO_DEVICE_DATA);
 
-	//
-	// Set up our queue to allow forwarding of requests to the parent
-	// This is done so that the cached Keyboard Attributes can be retrieved
-	//
-	//WdfPdoInitAllowForwardingRequestToParent(pDeviceInit);
+	WDF_FILEOBJECT_CONFIG_INIT(
+		&fileConfig,
+		EvtDeviceFileCreate,
+		EvtFileClose,
+		WDF_NO_EVENT_CALLBACK
+	);
+
+	WdfDeviceInitSetFileObjectConfig(pDeviceInit,
+		&fileConfig,
+		&pdoAttributes);
 
 	status = WdfDeviceCreate(&pDeviceInit, &pdoAttributes, &hChild);
 	if (!NT_SUCCESS(status)) {
@@ -696,4 +706,35 @@ NTSTATUS
 	*Queue = queue;
 
 	return status;
+}
+
+VOID
+EvtDeviceFileCreate(
+	IN WDFDEVICE            Device,
+	IN WDFREQUEST           Request,
+	IN WDFFILEOBJECT        FileObject
+)
+{
+	NTSTATUS             NtStatus = STATUS_SUCCESS;
+
+	UNREFERENCED_PARAMETER(Device);
+	UNREFERENCED_PARAMETER(FileObject);
+
+
+
+
+	WdfRequestComplete(Request, NtStatus);
+
+	return;
+}
+
+VOID
+EvtFileClose(
+	IN WDFFILEOBJECT    FileObject
+)
+{
+	UNREFERENCED_PARAMETER(FileObject);
+
+
+	return;
 }

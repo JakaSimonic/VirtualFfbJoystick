@@ -123,6 +123,7 @@ namespace VHClibWrapper
         {
             return new ReactTable[]
             {
+                new ReactTable(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),
                 new ReactTable(NativeMethods.Read_SetFeatureQueue, null, HidIoctlEnum.SetFeature),
                 new ReactTable(NativeMethods.Read_GetFeatureQueue, NativeMethods.Write_GetFeatureQueue, HidIoctlEnum.GetFeature),
                 new ReactTable(NativeMethods.Read_WriteReportQueue, null, HidIoctlEnum.WriteReport),

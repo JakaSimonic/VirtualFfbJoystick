@@ -51,6 +51,7 @@ __pragma(warning(disable: 4127)) while(constant); __pragma(warning(default: 4127
 #define STATUS_NOK			-1L
 
 HANDLE	file = NULL;
+short pos = 0;
 
 static DWORD ReadFromDriver(DWORD controlCode, LPVOID buffer, DWORD bufferSize, LPDWORD bytesRecivedSize)
 {
@@ -321,7 +322,12 @@ main(
 		status = ReadFromDriver(READ_REPORT, &buffer, sizeof(buffer), &returnSize);
 		if (STATUS_OK == status)
 		{
-			WriteToDriver(COMPLETE_READ_REPORT, "Hello world!", 13);
+			byte readBuffer[35] = { 0 };
+			readBuffer[0] = 1;
+			readBuffer[1] = (byte)(pos % 256);
+			readBuffer[2] = (byte)(pos / 256);
+			pos++;
+			WriteToDriver(COMPLETE_READ_REPORT, &readBuffer, sizeof(readBuffer));
 		}
 		else if (STATUS_NO_MORE_ENTRIES == GetLastError())
 		{

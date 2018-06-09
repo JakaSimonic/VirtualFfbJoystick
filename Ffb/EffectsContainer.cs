@@ -147,7 +147,6 @@ namespace Ffb
         {
             IEffect effect = _effects.GetEffect(effectBlockIndex);
             effect.SetParameter(parmName, parameter);
-            _effects.InsertEffect(effectBlockIndex, effect);
         }
 
         public void SetDuration(int effectBlockIndex, long loopCount)
@@ -170,7 +169,7 @@ namespace Ffb
 
         public void SetDeviceGain(double deviceGain)
         {
-            _deviceGain = deviceGain;
+            _deviceGain = deviceGain / _reportDescriptorProperties.MAX_DEVICE_GAIN;
         }
     }
 }
