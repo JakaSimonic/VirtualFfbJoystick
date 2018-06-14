@@ -29,7 +29,6 @@ namespace Ffb
                 if (previousAxesSpeeds != null)
                 {
                     var axesAccelerations = axesSpeeds.Zip(previousAxesSpeeds, (u, v) => u - v).ToList();
-
                     forces = _calculationProvider.GetCondition(cond, axesAccelerations);
                 }
 
@@ -38,7 +37,7 @@ namespace Ffb
 
             previousAxesPositions = joystickInput.axesPositions;
 
-            return forces.Select(x => _calculationProvider.ApplyGain(x, eff.gain)).ToList();
+            return forces.Select(x => -_calculationProvider.ApplyGain(x, eff.gain)).ToList();
         }
     }
 }

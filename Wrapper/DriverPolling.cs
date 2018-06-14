@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Timers;
 
 namespace VHClibWrapper
@@ -12,23 +11,10 @@ namespace VHClibWrapper
 
         public event EventHandler<HidEventArg> HidEvent;
 
-        public bool TestPassed { get; private set; } = false;
+        public bool Connected { get; private set; } = false;
 
         public DriverPolling()
         {
-            if (!NativeMethods.OpenFile())
-            {
-                throw new Exception("File failed to open");
-            }
-
-            string testMsg = string.Format("VirtualHID test time :{0}", DateTime.Now.TimeOfDay);
-            NativeMethods.TestWrite(testMsg);
-            TestPassed = string.Compare(NativeMethods.TestRead(), testMsg) == 0;
-            if (!TestPassed)
-            {
-                throw new Exception("Driver test failed!");
-            }
-
             reactTable = CreateReactTable();
         }
 
@@ -39,22 +25,46 @@ namespace VHClibWrapper
 
         public void StartPolling(int pollingInterval)
         {
-            pollTimer = new System.Timers.Timer();
-            pollTimer.Interval = pollingInterval;
+            if (!Connected)
+            {
+                if (!NativeMethods.OpenFile())
+                {
+                    throw new Exception("File failed to open");
+                }
 
-            // Hook up the Elapsed event for the timer.
-            pollTimer.Elapsed += OnPollEvent;
+                string testMsg = string.Format("VirtualHID test time :{0}", DateTime.Now.TimeOfDay);
+                NativeMethods.TestWrite(testMsg);
+                bool test = string.Compare(NativeMethods.TestRead(), testMsg) == 0;
+                if (!test)
+                {
+                    throw new Exception("Driver test failed!");
+                }
 
-            // Have the timer fire repeated events (true is the default)
-            pollTimer.AutoReset = true;
+                pollTimer = new System.Timers.Timer();
+                pollTimer.Interval = pollingInterval;
 
-            // Start the timer
-            pollTimer.Start();
+                // Hook up the Elapsed event for the timer.
+                pollTimer.Elapsed += OnPollEvent;
+
+                // Have the timer fire repeated events (true is the default)
+                pollTimer.AutoReset = true;
+
+                // Start the timer
+                pollTimer.Start();
+
+                Connected = test;
+            }
         }
 
         public void StopPolling()
         {
-            pollTimer.Stop();
+            if (Connected)
+            {
+                Connected = false;
+                pollTimer.Enabled = false;
+                pollTimer.Stop();
+                NativeMethods.CloseFile();
+            }
         }
 
         private void OnPollEvent(object source, System.Timers.ElapsedEventArgs e)
@@ -109,7 +119,6 @@ namespace VHClibWrapper
             //dispose unmanaged resources
             pollTimer.Stop();
             pollTimer.Dispose();
-            NativeMethods.CloseFile();
             disposed = true;
         }
 

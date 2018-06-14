@@ -26,12 +26,11 @@ namespace Ffb
                 var axisSpeed = joystickInput.axesPositions.Zip(previousAxesPositions, (u, v) => u - v).ToList();
 
                 forces = _calculationProvider.GetCondition(cond, axisSpeed);
-                forces = forces.Select(x => -x).ToList();
             }
 
             previousAxesPositions = joystickInput.axesPositions;
 
-            return forces.Select(x => _calculationProvider.ApplyGain(x, eff.gain)).ToList();
+            return forces.Select(x => -_calculationProvider.ApplyGain(x, eff.gain)).ToList();
         }
     }
 }

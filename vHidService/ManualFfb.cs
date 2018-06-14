@@ -3,10 +3,12 @@ using System.Linq;
 
 namespace vHidService
 {
-    internal class ManualFfb
+    public class ManualFfb
     {
         private FfbWrapper _ffbWrapper;
-
+        const string CONDITION_REPORT = "03-03-00-00-00-10-27-10-27-00-FF-FF";
+        const string EFFECT_OPERATION = "0A-01-01-01";
+        
         public ManualFfb(FfbWrapper ffbWrapper)
         {
             _ffbWrapper = ffbWrapper;
@@ -44,7 +46,7 @@ namespace vHidService
                 case 3:
                 case 4:
                     ConditionEffect conditionEffect = (ConditionEffect)parameter;
-                    byte[] stream = "03-03-00-00-00-10-27-10-27-00-FF-FF".Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                    byte[] stream = CONDITION_REPORT.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     stream[1] = (byte)effectOffset;
                     stream[5] = (byte)(conditionEffect.coefficient % 256);
                     stream[6] = (byte)(conditionEffect.coefficient / 256);
@@ -53,7 +55,7 @@ namespace vHidService
                     stream[9] = conditionEffect.deadBand;
                     _ffbWrapper.WriteReport(stream);
 
-                    stream = "0A-01-01-01".Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                    stream = EFFECT_OPERATION.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     stream[1] = (byte)effectOffset;
                     stream[2] = (byte)(conditionEffect.enabled ? 1 : 3);
                     _ffbWrapper.WriteReport(stream);
@@ -61,7 +63,7 @@ namespace vHidService
 
                 case 5:
                     MotionLimit motinLimit = (MotionLimit)parameter;
-                    byte[] stream2 = "03-03-00-00-00-10-27-10-27-00-FF-FF".Split(new char[] { '-' }).Select(x => byte.Parse(x)).ToArray();
+                    byte[] stream2 = CONDITION_REPORT.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     stream2[1] = (byte)effectOffset;
                     stream2[3] = (byte)(motinLimit.cpOfffset % 256);
                     stream2[4] = (byte)(motinLimit.cpOfffset / 256);
@@ -72,7 +74,7 @@ namespace vHidService
 
                     _ffbWrapper.WriteReport(stream2);
 
-                    stream = "0A-01-01-01".Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                    stream = EFFECT_OPERATION.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     stream[1] = (byte)effectOffset;
                     stream[2] = (byte)(motinLimit.enabled ? 1 : 3);
                     _ffbWrapper.WriteReport(stream);
@@ -85,7 +87,7 @@ namespace vHidService
 
                     _ffbWrapper.WriteReport(stream2);
 
-                    stream = "0A-01-01-01".Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
+                    stream = EFFECT_OPERATION.Split(new char[] { '-' }).Select(x => byte.Parse(x, System.Globalization.NumberStyles.HexNumber)).ToArray();
                     stream[1] = (byte)effectOffset;
                     stream[2] = (byte)(motinLimit.enabled ? 1 : 3);
                     _ffbWrapper.WriteReport(stream);

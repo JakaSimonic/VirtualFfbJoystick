@@ -153,7 +153,7 @@ namespace Ffb
 
         public void DeviceGain(object parameter)
         {
-            _effectsContainer.SetDeviceGain(((DEVICE_GAIN)parameter).deviceGain / _reportDescriptorProperties.MAX_DEVICE_GAIN);
+            _effectsContainer.SetDeviceGain(((DEVICE_GAIN)parameter).deviceGain);
         }
 
         public object GetBlockLoad()

@@ -66,7 +66,7 @@ namespace vHidService
                 serializer.Serialize(writer, effect);
             }
             Context.ManualConditionEffects = effect;
-            //VhidService.manualFfb.UpdateEffects();
+            VhidService.manualFfb.UpdateEffects();
             return Ok();
         }
     }

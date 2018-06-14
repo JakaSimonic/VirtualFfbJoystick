@@ -144,9 +144,9 @@ namespace vHidService
                 cpOffset = BitConverter.ToInt16(buffer, 3),
                 positiveCoefficient = BitConverter.ToInt16(buffer, 5),
                 negativeCoefficient = BitConverter.ToInt16(buffer, 7),
-                positiveSaturation = buffer[9] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
-                negativeSaturation = buffer[10] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
-                deadBand = buffer[11] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
+                positiveSaturation = buffer[10] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                negativeSaturation = buffer[11] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM,
+                deadBand = buffer[9] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
             };
         }
 
@@ -209,10 +209,10 @@ namespace vHidService
             {
                 effectBlockIndex = buffer[1],
                 effetType = (EFFECT_TYPE)buffer[2],
-                duration = BitConverter.ToUInt16(buffer, 3),
-                triggerRepeatInterval = BitConverter.ToUInt16(buffer, 5),
+                duration = BitConverter.ToInt16(buffer, 3),
+                triggerRepeatInterval = BitConverter.ToInt16(buffer, 5),
                 samplePeriod = BitConverter.ToUInt16(buffer, 7),
-                gain = buffer[9] * reportDescriptorProperties.PHYSICAL_MAXIMUM / reportDescriptorProperties.MAX_GAIN,
+                gain = buffer[9] / reportDescriptorProperties.MAX_GAIN,
                 trigerButton = buffer[10],
                 axisEnabled = new List<bool>() { ((buffer[11] & 1) != 0), (((buffer[11] >> 1) & 1) != 0) },
                 polar = (((buffer[11] >> 2) & 1) != 0),
@@ -242,7 +242,7 @@ namespace vHidService
         {
             return new DEVICE_GAIN
             {
-                deviceGain = buffer[1] / reportDescriptorProperties.MAX_GAIN * reportDescriptorProperties.PHYSICAL_MAXIMUM
+                deviceGain = buffer[1] / reportDescriptorProperties.MAX_GAIN
             };
         }
 

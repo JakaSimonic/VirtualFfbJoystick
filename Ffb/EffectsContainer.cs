@@ -169,7 +169,7 @@ namespace Ffb
 
         public void SetDeviceGain(double deviceGain)
         {
-            _deviceGain = deviceGain / _reportDescriptorProperties.MAX_DEVICE_GAIN;
+            _deviceGain = deviceGain;
         }
     }
 }

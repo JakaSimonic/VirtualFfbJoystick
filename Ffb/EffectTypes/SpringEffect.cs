@@ -18,7 +18,7 @@ namespace Ffb
             List<CONDITION> cond = (List<CONDITION>)structDictonary["CONDITION"];
 
             List<double> forces = _calculationProvider.GetCondition(cond, joystickInput.axesPositions);
-            return forces.Select(x => _calculationProvider.ApplyGain(x, eff.gain)).ToList();
+            return forces.Select(x => -_calculationProvider.ApplyGain(x, eff.gain)).ToList();
         }
     }
 }

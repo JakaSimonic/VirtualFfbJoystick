@@ -76,7 +76,7 @@ namespace Ffb
                     double cpOffset = comb.condition.cpOffset;
                     double negativeSaturation = -comb.condition.negativeSaturation;
                     double positiveSaturation = comb.condition.positiveSaturation;
-                    double negativeCoefficient = -comb.condition.negativeCoefficient;
+                    double negativeCoefficient = comb.condition.negativeCoefficient;
                     double positiveCoefficient = comb.condition.positiveCoefficient;
 
                     if (comb.position < (cpOffset - deadBand))
@@ -108,7 +108,7 @@ namespace Ffb
                 {
                     if (axisPosition < (cpOffset - deadBand))
                     {
-                        tempForce = ((cpOffset - deadBand) - axisPosition) * negativeCoefficient;
+                        tempForce = (axisPosition - (cpOffset - deadBand)) * negativeCoefficient;
                         axisForces.Add(tempForce < negativeSaturation ? negativeSaturation : tempForce);
                     }
                     else if (axisPosition > (cpOffset + deadBand))
