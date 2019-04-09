@@ -45,34 +45,34 @@ namespace vHidService
 
             FfbWriteReportTypeMapper = new Dictionary<int, SetInvoke>()
             {
-                { 1, new SetInvoke(_ffbEngine.Set["SetEffect"], SetEffectMapper ) },
-                { 2, new SetInvoke(_ffbEngine.Set["SetEnvelope"], EnvelopeMapper ) },
-                { 3, new SetInvoke(_ffbEngine.Set["SetCondition"], ConditionMapper) },
-                { 4,  new SetInvoke( _ffbEngine.Set["SetPeriodic"], PeriodMapper) },
-                { 5,  new SetInvoke( _ffbEngine.Set["SetConstantForce"], ConstantForceMapper ) },
-                { 6,  new SetInvoke( _ffbEngine.Set["SetRampForce"], RampMapper ) },
-                { 10, new SetInvoke( _ffbEngine.Set["EffectOperation"], OperationMapper ) },
-                { 13, new SetInvoke( _ffbEngine.Set["DeviceGain"], DeviceGainMapper ) },
-                { 12, new SetInvoke( _ffbEngine.Set["PidDeviceControl"], PidDeviceControlMapper) },
-                { 11, new SetInvoke(_ffbEngine.Set["PidBlockFree"], BlockFreeMapper ) },
-                { 7, new SetInvoke( _ffbEngine.Set["CustomForceData"], CustomForceDataMapper) },
-                { 14,new SetInvoke(_ffbEngine.Set["SetCustomForce"], CustomForceMapper) }
+                { 1, new SetInvoke(_ffbEngine.Set[typeof(SET_EFFECT)], SetEffectMapper ) },
+                { 2, new SetInvoke(_ffbEngine.Set[typeof(ENVELOPE)], EnvelopeMapper ) },
+                { 3, new SetInvoke(_ffbEngine.Set[typeof(CONDITION)], ConditionMapper) },
+                { 4,  new SetInvoke( _ffbEngine.Set[typeof(PERIOD)], PeriodMapper) },
+                { 5,  new SetInvoke( _ffbEngine.Set[typeof(CONSTANT)], ConstantForceMapper ) },
+                { 6,  new SetInvoke( _ffbEngine.Set[typeof(RAMP)], RampMapper ) },
+                { 10, new SetInvoke( _ffbEngine.Set[typeof(OPERATION)], OperationMapper ) },
+                { 13, new SetInvoke( _ffbEngine.Set[typeof(DEVICE_GAIN)], DeviceGainMapper ) },
+                { 12, new SetInvoke( _ffbEngine.Set[typeof(PID_DEVICE_CONTROL)], PidDeviceControlMapper) },
+                { 11, new SetInvoke(_ffbEngine.Set[typeof(PID_BLOCK_FREE)], BlockFreeMapper ) },
+                { 7, new SetInvoke( _ffbEngine.Set[typeof(CUSTOM_FORCE_PARAMETER)], CustomForceDataMapper) },
+                { 14,new SetInvoke(_ffbEngine.Set[typeof(CUSTOM_FORCE_DATA_REPORT)], CustomForceMapper) }
             };
 
             FfbSetFeatureTypeMapper = new Dictionary<int, SetInvoke>()
             {
-                { 5, new SetInvoke(_ffbEngine.Set["CreateNewEffect"], CreateNewEffectMapper)}
+                { 5, new SetInvoke(_ffbEngine.Set[typeof(CREATE_NEW_EFFECT)], CreateNewEffectMapper)}
             };
 
             FfbGetFeatureTypeMapper = new Dictionary<int, GetInvoke>()
             {
-                {6, new GetInvoke(_ffbEngine.Get["BlockLoad"], PidBlockLoadMapper) },
-                {7, new GetInvoke(_ffbEngine.Get["PidPoolReport"], PidPoolReportMapper) }
+                {6, new GetInvoke(_ffbEngine.Get[typeof(PID_BLOCK_LOAD)], PidBlockLoadMapper) },
+                {7, new GetInvoke(_ffbEngine.Get[typeof(PID_POOL_REPORT)], PidPoolReportMapper) }
             };
 
             FfbReadReportTypeMapper = new Dictionary<int, GetInvoke>()
             {
-                {2, new GetInvoke(_ffbEngine.Get["PidState"], PidStateMapper) },
+                {2, new GetInvoke(_ffbEngine.Get[typeof(PID_STATE)], PidStateMapper) },
             };
         }
 

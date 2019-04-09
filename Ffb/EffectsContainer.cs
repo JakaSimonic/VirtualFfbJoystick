@@ -117,7 +117,7 @@ namespace Ffb
             {
                 if (effect != null && effect.Operational)
                 {
-                    int triggerButton = ((SET_EFFECT)effect.GetParameter("SET_EFFECT")).trigerButton;
+                    int triggerButton = ((SET_EFFECT)effect.GetParameter(typeof(SET_EFFECT))).trigerButton;
                     if (triggerButton == 0xFF)
                     {
                         continue;
@@ -135,28 +135,28 @@ namespace Ffb
             }
         }
 
-        public void CreateNewEffect(int effectBlockIndex, string parmName, object parameter)
+        public void CreateNewEffect(int effectBlockIndex, CREATE_NEW_EFFECT parameter)
         {
-            EFFECT_TYPE effetType = ((CREATE_NEW_EFFECT)parameter).effetType;
+            EFFECT_TYPE effetType = parameter.effetType;
             IEffectType effectTypeObject = efectsDict[effetType].Invoke();
             IEffect effect = new Effect(effectTypeObject, _reportDescriptorProperties);
             _effects.InsertEffect(effectBlockIndex, effect);
         }
 
-        public void SetParameter(int effectBlockIndex, string parmName, object parameter)
+        public void SetParameter(int effectBlockIndex, Type type, object parameter)
         {
             IEffect effect = _effects.GetEffect(effectBlockIndex);
-            effect.SetParameter(parmName, parameter);
+            effect.SetParameter(type, parameter);
         }
 
         public void SetDuration(int effectBlockIndex, long loopCount)
         {
             IEffect effect = _effects.GetEffect(effectBlockIndex);
-            SET_EFFECT setEffect = (SET_EFFECT)effect.GetParameter("SET_EFFECT");
+            SET_EFFECT setEffect = (SET_EFFECT)effect.GetParameter(typeof(SET_EFFECT));
 
             if (loopCount == _reportDescriptorProperties.MAX_LOOP)
             {
-                ENVELOPE envelope = (ENVELOPE)effect.GetParameter("ENVELOPE");
+                ENVELOPE envelope = (ENVELOPE)effect.GetParameter(typeof(ENVELOPE));
 
                 setEffect.duration = _reportDescriptorProperties.DURATION_INFINITE;
                 envelope.fadeTime = 0;

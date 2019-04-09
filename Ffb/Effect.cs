@@ -12,7 +12,7 @@ namespace Ffb
         private bool paused = true;
         private bool buttonReleased = false;
         private IEffectType _effect;
-        private Dictionary<string, object> _structDictonary;
+        private Dictionary<Type, object> _structDictonary;
         private IReportDescriptorProperties _reportDescriptorProperties;
 
         public bool Operational
@@ -24,14 +24,14 @@ namespace Ffb
         public Effect(IEffectType effect, IReportDescriptorProperties reportDescriptorProperties)
         {
             _effect = effect;
-            _structDictonary = new Dictionary<string, object>();
+            _structDictonary = new Dictionary<Type, object>();
             _reportDescriptorProperties = reportDescriptorProperties;
         }
 
         public void Start()
         {
             paused = false;
-            long startDelay = ((SET_EFFECT)_structDictonary["SET_EFFECT"]).startDelay;
+            long startDelay = ((SET_EFFECT)_structDictonary[typeof(SET_EFFECT)]).startDelay;
             startTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) + startDelay;
             lastUpdate = startTime;
             pauseTime = 0;
@@ -58,12 +58,12 @@ namespace Ffb
                 long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - startTime;
                 long lastUpdateDeltaTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - lastUpdate;
                 lastUpdate = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
-                SET_EFFECT setEffect = (SET_EFFECT)_structDictonary["SET_EFFECT"];
+                SET_EFFECT setEffect = (SET_EFFECT)_structDictonary[typeof(SET_EFFECT)];
 
                 long duration = setEffect.duration;
                 long samplePeriod = setEffect.samplePeriod;
-                if (((elapsedTime > 0) && 
-                    ((elapsedTime < duration) || (duration == _reportDescriptorProperties.DURATION_INFINITE))) && 
+                if (((elapsedTime > 0) &&
+                    ((elapsedTime < duration) || (duration == _reportDescriptorProperties.DURATION_INFINITE))) &&
                     (lastUpdateDeltaTime > samplePeriod))
                 {
                     forces = _effect.GetForce(joystickInput, _structDictonary, elapsedTime);
@@ -72,29 +72,29 @@ namespace Ffb
             return forces;
         }
 
-        public void SetParameter(string parmName, object parameter)
+        public void SetParameter(Type parmType, object parameter)
         {
-            if (!parmName.Equals("CONDITION") && !parmName.Equals("CUSTOM_FORCE_DATA_REPORT"))
+            if ((parmType != typeof(CONDITION)) && (parmType != typeof(CUSTOM_FORCE_DATA_REPORT)))
             {
-                if (parmName.Equals("SET_EFFECT"))
+                if (parmType.Equals(typeof(SET_EFFECT)))
                 {
                     Operational = true;
                 }
 
-                if (_structDictonary.ContainsKey(parmName))
+                if (_structDictonary.ContainsKey(parmType))
                 {
-                    _structDictonary[parmName] = parameter;
+                    _structDictonary[parmType] = parameter;
                 }
                 else
                 {
-                    _structDictonary.Add(parmName, parameter);
+                    _structDictonary.Add(parmType, parameter);
                 }
             }
-            else if (parmName == "CONDITION")
+            else if (parmType == typeof(CONDITION))
             {
-                if (_structDictonary.ContainsKey(parmName))
+                if (_structDictonary.ContainsKey(parmType))
                 {
-                    List<CONDITION> conditionList = (List<CONDITION>)_structDictonary[parmName];
+                    List<CONDITION> conditionList = (List<CONDITION>)_structDictonary[parmType];
                     int index = ((CONDITION)parameter).blockOffset;
                     if (conditionList.Count > index)
                     {
@@ -103,33 +103,33 @@ namespace Ffb
                     else
                     {
                         conditionList.Add((CONDITION)parameter);
-                        //_structDictonary[parmName] = conditionList;
+                        //_structDictonary[parmType] = conditionList;
                     }
                 }
                 else
                 {
                     List<CONDITION> conditionList = new List<CONDITION>();
                     conditionList.Add((CONDITION)parameter);
-                    _structDictonary.Add(parmName, conditionList);
+                    _structDictonary.Add(parmType, conditionList);
                 }
             }
             else
             {
-                if (_structDictonary.ContainsKey(parmName))
+                if (_structDictonary.ContainsKey(parmType))
                 {
                     List<int> samples = ((CUSTOM_FORCE_DATA_REPORT)parameter).samples;
-                    ((CUSTOM_FORCE_DATA_REPORT)_structDictonary[parmName]).samples.AddRange(samples);
+                    ((CUSTOM_FORCE_DATA_REPORT)_structDictonary[parmType]).samples.AddRange(samples);
                 }
                 else
                 {
-                    _structDictonary.Add(parmName, parameter);
+                    _structDictonary.Add(parmType, parameter);
                 }
             }
         }
 
-        public object GetParameter(string parmName)
+        public object GetParameter(Type parmType)
         {
-            return _structDictonary[parmName];
+            return _structDictonary[parmType];
         }
 
         public void TriggerButtonPressed()
@@ -144,7 +144,7 @@ namespace Ffb
             if (!buttonReleased)
             {
                 long elapsedTime = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - startTime;
-                SET_EFFECT setEffect = (SET_EFFECT)_structDictonary["SET_EFFECT"];
+                SET_EFFECT setEffect = (SET_EFFECT)_structDictonary[typeof(SET_EFFECT)];
                 long duration = setEffect.duration;
                 long triggerRepeatInterval = setEffect.triggerRepeatInterval;
                 if ((duration + triggerRepeatInterval) > elapsedTime)

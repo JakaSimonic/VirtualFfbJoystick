@@ -87,6 +87,11 @@ namespace Ffb
         public EFFECT_TYPE effetType;
     }
 
+    public struct PID_POOL_REPORT
+    {
+        public byte[] report; 
+    }
+
     public struct PID_BLOCK_LOAD
     {
         public int effectBlockIndex;   // 1..40

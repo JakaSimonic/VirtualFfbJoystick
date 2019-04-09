@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Ffb
 {
@@ -11,11 +12,11 @@ namespace Ffb
             _calculationProvider = calculationProvider;
         }
 
-        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
+        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<Type, object> structDictonary, double elapsedTime)
         {
-            SET_EFFECT eff = (SET_EFFECT)structDictonary["SET_EFFECT"];
-            RAMP rmp = (RAMP)structDictonary["RAMP"];
-            ENVELOPE env = (ENVELOPE)structDictonary["ENVELOPE"];
+            SET_EFFECT eff = (SET_EFFECT)structDictonary[typeof(SET_EFFECT)];
+            RAMP rmp = (RAMP)structDictonary[typeof(RAMP)];
+            ENVELOPE env = (ENVELOPE)structDictonary[typeof(ENVELOPE)];
 
             List<double> forces = new List<double>();
 

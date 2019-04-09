@@ -30,7 +30,7 @@ namespace Ffb
                 _disableActuators -= value;
             }
         }
-        internal FfbEngine(Dictionary<string, Action<object>> dictSet, Dictionary<string, Func<object>> dictGet, Func<JOYSTICK_INPUT, List<double>> getForces, Action enableActuators, Action disableActuators)
+        internal FfbEngine(Dictionary<Type, Action<object>> dictSet, Dictionary<Type, Func<object>> dictGet, Func<JOYSTICK_INPUT, List<double>> getForces, Action enableActuators, Action disableActuators)
         {
             Set = dictSet;
             Get = dictGet;
@@ -41,8 +41,8 @@ namespace Ffb
 
         public Func<JOYSTICK_INPUT,List<double>> GetForces;
 
-        public Dictionary<string, Action<object>> Set { get; private set; }
+        public Dictionary<Type, Action<object>> Set { get; private set; }
 
-        public Dictionary<string, Func<object>> Get { get; private set; }
+        public Dictionary<Type, Func<object>> Get { get; private set; }
     }
 }

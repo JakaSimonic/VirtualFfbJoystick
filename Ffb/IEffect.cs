@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Ffb
 {
@@ -7,8 +8,8 @@ namespace Ffb
         void Start();
         void Continue();
         void Stop();
-        object GetParameter(string parmName);
-        void SetParameter(string parmName, object parameter);
+        object GetParameter(Type parmType);
+        void SetParameter(Type type, object parameter);
         List<double> GetForce(JOYSTICK_INPUT jostickInput);
         void TriggerButtonPressed();
         void TriggerButtonReleased();

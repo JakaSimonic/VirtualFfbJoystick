@@ -34,7 +34,7 @@ namespace Ffb
             }
             else
             {
-                _effectsContainer.CreateNewEffect(index, null, parameter);
+                _effectsContainer.CreateNewEffect(index, (CREATE_NEW_EFFECT)parameter);
                 pidBlockLoad.loadStatus = LOAD_STATUS.SUCCESS;
             }
             pidBlockLoad.ramPoolAvailable = _reportDescriptorProperties.MAX_RAM_POOL;
@@ -42,42 +42,42 @@ namespace Ffb
 
         public void SetEnvelopeParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((ENVELOPE)parameter).effectBlockIndex, "ENVELOPE", parameter);
+            _effectsContainer.SetParameter(((ENVELOPE)parameter).effectBlockIndex, typeof(ENVELOPE), parameter);
         }
 
         internal void SetCustomForce(object parameter)
         {
-            _effectsContainer.SetParameter(((CUSTOM_FORCE_PARAMETER)parameter).effectBlockIndex, "CUSTOM_FORCE_PARAMETER", parameter);
+            _effectsContainer.SetParameter(((CUSTOM_FORCE_PARAMETER)parameter).effectBlockIndex, typeof(CUSTOM_FORCE_PARAMETER), parameter);
         }
 
         internal void CustomForceData(object parameter)
         {
-            _effectsContainer.SetParameter(((CUSTOM_FORCE_DATA_REPORT)parameter).effectBlockIndex, "CUSTOM_FORCE_DATA_REPORT", parameter);
+            _effectsContainer.SetParameter(((CUSTOM_FORCE_DATA_REPORT)parameter).effectBlockIndex, typeof(CUSTOM_FORCE_DATA_REPORT), parameter);
         }
 
         public void SetConditionParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((CONDITION)parameter).effectBlockIndex, "CONDITION", parameter);
+            _effectsContainer.SetParameter(((CONDITION)parameter).effectBlockIndex, typeof(CONDITION), parameter);
         }
 
         public void SetPeriodParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((PERIOD)parameter).effectBlockIndex, "PERIOD", parameter);
+            _effectsContainer.SetParameter(((PERIOD)parameter).effectBlockIndex, typeof(PERIOD), parameter);
         }
 
         public void SetRampParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((RAMP)parameter).effectBlockIndex, "RAMP", parameter);
+            _effectsContainer.SetParameter(((RAMP)parameter).effectBlockIndex, typeof(RAMP), parameter);
         }
 
         public void SetEffectParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((SET_EFFECT)parameter).effectBlockIndex, "SET_EFFECT", parameter);
+            _effectsContainer.SetParameter(((SET_EFFECT)parameter).effectBlockIndex, typeof(SET_EFFECT), parameter);
         }
 
         public void SetConstantParameter(object parameter)
         {
-            _effectsContainer.SetParameter(((CONSTANT)parameter).effectBlockIndex, "CONSTANT", parameter);
+            _effectsContainer.SetParameter(((CONSTANT)parameter).effectBlockIndex, typeof(CONSTANT), parameter);
         }
 
         public void EffectsOperation(object parameter)
@@ -167,7 +167,9 @@ namespace Ffb
         }
         public object GetPidPoolReport()
         {
-            return new byte[] { 0x07, 0xFF, 0xFF, 0xFF, 0x01 };
+            PID_POOL_REPORT ppr = new PID_POOL_REPORT();
+            ppr.report=new byte[] { 0x07, 0xFF, 0xFF, 0xFF, 0x01 };
+            return ppr;
         }
 
         public List<double> GetForces(JOYSTICK_INPUT joystickInput)

@@ -12,11 +12,11 @@ namespace Ffb
             _calculationProvider = calculationProvider;
         }
 
-        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
+        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<Type, object> structDictonary, double elapsedTime)
         {
-            SET_EFFECT eff = (SET_EFFECT)structDictonary["SET_EFFECT"];
-            CUSTOM_FORCE_PARAMETER customForceParameter = (CUSTOM_FORCE_PARAMETER)structDictonary["CUSTOM_FORCE_PARAMETER"];
-            CUSTOM_FORCE_DATA_REPORT customForceDataReport = (CUSTOM_FORCE_DATA_REPORT)structDictonary["CUSTOM_FORCE_DATA_REPORT"];
+            SET_EFFECT eff = (SET_EFFECT)structDictonary[typeof(SET_EFFECT)];
+            CUSTOM_FORCE_PARAMETER customForceParameter = (CUSTOM_FORCE_PARAMETER)structDictonary[typeof(CUSTOM_FORCE_PARAMETER)];
+            CUSTOM_FORCE_DATA_REPORT customForceDataReport = (CUSTOM_FORCE_DATA_REPORT)structDictonary[typeof(CUSTOM_FORCE_DATA_REPORT)];
 
             List<double> forces = new List<double>();
             List<int> samples = customForceDataReport.samples;

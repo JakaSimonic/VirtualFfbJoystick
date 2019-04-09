@@ -6,7 +6,7 @@ namespace Ffb
 {
     internal class DamperEffect : IEffectType
     {
-        public Dictionary<string, object> structDictonary = new Dictionary<string, object>();
+        public Dictionary<Type, object> structDictonary = new Dictionary<Type, object>();
 
         private readonly ICalculationProvider _calculationProvider;
 
@@ -17,10 +17,10 @@ namespace Ffb
             _calculationProvider = calculationProvider;
         }
 
-        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<string, object> structDictonary, double elapsedTime)
+        public List<double> GetForce(JOYSTICK_INPUT joystickInput, Dictionary<Type, object> structDictonary, double elapsedTime)
         {
-            SET_EFFECT eff = (SET_EFFECT)structDictonary["SET_EFFECT"];
-            List<CONDITION> cond = (List<CONDITION>)structDictonary["CONDITION"];
+            SET_EFFECT eff = (SET_EFFECT)structDictonary[typeof(SET_EFFECT)];
+            List<CONDITION> cond = (List<CONDITION>)structDictonary[typeof(CONDITION)];
 
             List<double> forces = joystickInput.axesPositions.Select(x => 0d).ToList();
 

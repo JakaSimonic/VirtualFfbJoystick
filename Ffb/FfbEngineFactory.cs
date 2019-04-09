@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using TinyIoC;
 namespace Ffb
 {
-    public  class FfbEngineFactory
+    public class FfbEngineFactory
     {
         private FfbEngineLogic _ffbLogic;
-
         public FfbEngineFactory(IReportDescriptorProperties reportDescriptorProperties)
         {
             TinyIoCContainer.Current.Register<ICalculationProvider>(new CalculationProvider());
@@ -16,28 +15,28 @@ namespace Ffb
         public FfbEngine Create()
         {
             FfbEngine ffb = new FfbEngine(
-            new Dictionary<string, Action<object>>()
+            new Dictionary<Type, Action<object>>()
               {
-                {"SetEffect",  _ffbLogic.SetEffectParameter},
-                {"SetEnvelope",  _ffbLogic.SetEnvelopeParameter},
-                {"SetCondition",  _ffbLogic.SetConditionParameter},
-                {"SetPeriodic",  _ffbLogic.SetPeriodParameter},
-                {"SetConstantForce",  _ffbLogic.SetConstantParameter},
-                {"SetRampForce",  _ffbLogic.SetRampParameter},
-                {"EffectOperation", _ffbLogic.EffectsOperation },
-                {"PidBlockFree", _ffbLogic.PIDBlockFree },
-                {"PidDeviceControl", _ffbLogic.PIDDeviceControl },
-                {"DeviceGain", _ffbLogic.DeviceGain },
-                {"CreateNewEffect", _ffbLogic.CreateNewEffect },
-                {"CustomForceData", _ffbLogic.CustomForceData},
-                {"SetCustomForce", _ffbLogic.SetCustomForce },
+                {typeof(SET_EFFECT),  _ffbLogic.SetEffectParameter},
+                {typeof(ENVELOPE),  _ffbLogic.SetEnvelopeParameter},
+                {typeof(CONDITION),  _ffbLogic.SetConditionParameter},
+                {typeof(PERIOD),  _ffbLogic.SetPeriodParameter},
+                {typeof(CONSTANT),  _ffbLogic.SetConstantParameter},
+                {typeof(RAMP),  _ffbLogic.SetRampParameter},
+                {typeof(OPERATION), _ffbLogic.EffectsOperation},
+                {typeof(PID_BLOCK_FREE), _ffbLogic.PIDBlockFree },
+                {typeof(PID_DEVICE_CONTROL), _ffbLogic.PIDDeviceControl },
+                {typeof(DEVICE_GAIN), _ffbLogic.DeviceGain },
+                {typeof(CREATE_NEW_EFFECT), _ffbLogic.CreateNewEffect },
+                {typeof(CUSTOM_FORCE_DATA_REPORT), _ffbLogic.CustomForceData},
+                {typeof(CUSTOM_FORCE_PARAMETER), _ffbLogic.SetCustomForce },
               },
 
-            new Dictionary<string, Func<object>>()
+            new Dictionary<Type, Func<object>>()
               {
-                {"BlockLoad", _ffbLogic.GetBlockLoad },
-                {"PidState", _ffbLogic.GetPidState},
-                {"PidPoolReport", _ffbLogic.GetPidPoolReport }
+                {typeof(PID_BLOCK_LOAD), _ffbLogic.GetBlockLoad },
+                {typeof(PID_STATE), _ffbLogic.GetPidState},
+                {typeof(PID_POOL_REPORT), _ffbLogic.GetPidPoolReport }
               },
 
             _ffbLogic.GetForces,
