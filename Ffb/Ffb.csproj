@@ -45,10 +45,8 @@
     <Compile Include="CalculationProvider.cs" />
     <Compile Include="ContainerExtensions.cs" />
     <Compile Include="EffectTypes\CustomEffect.cs" />
-    <Compile Include="FfbEngine.cs" />
     <Compile Include="EffectsContainer.cs" />
-    <Compile Include="FfbEngineLogic.cs" />
-    <Compile Include="FfbEngineFactory.cs" />
+    <Compile Include="FfbEngine.cs" />
     <Compile Include="ICalculationProvider.cs" />
     <Compile Include="EffectTypes\DamperEffect.cs" />
     <Compile Include="EffectTypes\FrictionEffect.cs" />
@@ -61,7 +59,6 @@
     <Compile Include="EffectTypes\TriangleEffect.cs" />
     <Compile Include="FfbStructs.cs" />
     <Compile Include="IEffectType.cs" />
-    <Compile Include="IFfbMapper.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="IEffect.cs" />
     <Compile Include="IReportDescriptorProperties.cs" />

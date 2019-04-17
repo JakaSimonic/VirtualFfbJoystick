@@ -9,79 +9,80 @@ namespace vHidService
     {
         private FfbEngine _ffbEngine;
         private IReportDescriptorProperties reportDescriptorProperties = new ReportDescriptorProperties();
-        private Dictionary<int, EFFECT_OPERATION> EffectOperationMapper;
-        private Dictionary<int, EFFECT_TYPE> EffectTypeMapper;
-        private Dictionary<int, SetInvoke> FfbWriteReportTypeMapper;
-        private Dictionary<int, SetInvoke> FfbSetFeatureTypeMapper;
-        private Dictionary<int, GetInvoke> FfbGetFeatureTypeMapper;
-        private Dictionary<int, GetInvoke> FfbReadReportTypeMapper;
+        private Dictionary<int, object> FfbWriteReportPipe;
+        private Dictionary<int, object> FfbSetFeaturePipe;
+        private Dictionary<int, object> FfbGetFeaturePipe;
+        private Dictionary<int, object> FfbReadReportPipe;
+        private Dictionary<Type, Delegate> FFbSetMethods;
+        private Dictionary<Type, Delegate> FfbGetMethods;
 
         public FfbWrapper()
         {
-            _ffbEngine = (new FfbEngineFactory(reportDescriptorProperties)).Create();
+            _ffbEngine = new FfbEngine(reportDescriptorProperties);
 
-            EffectOperationMapper = new Dictionary<int, EFFECT_OPERATION>()
+            FFbSetMethods = new Dictionary<Type, Delegate>()
+              {
+                {typeof(SET_EFFECT), new Action<SET_EFFECT>(_ffbEngine.SetEffectParameter)},
+                {typeof(ENVELOPE), new Action<ENVELOPE>(_ffbEngine.SetEnvelopeParameter)},
+                {typeof(CONDITION), new Action<CONDITION>(_ffbEngine.SetConditionParameter)},
+                {typeof(PERIOD), new Action<PERIOD>(_ffbEngine.SetPeriodParameter)},
+                {typeof(CONSTANT), new Action<CONSTANT>(_ffbEngine.SetConstantParameter)},
+                {typeof(RAMP), new Action<RAMP>(_ffbEngine.SetRampParameter)},
+                {typeof(OPERATION), new Action<OPERATION>(_ffbEngine.EffectsOperation)},
+                {typeof(PID_BLOCK_FREE), new Action<PID_BLOCK_FREE>(_ffbEngine.PIDBlockFree) },
+                {typeof(PID_DEVICE_CONTROL), new Action<PID_DEVICE_CONTROL>(_ffbEngine.PIDDeviceControl) },
+                {typeof(DEVICE_GAIN), new Action<DEVICE_GAIN>(_ffbEngine.DeviceGain) },
+                {typeof(CREATE_NEW_EFFECT), new Action<CREATE_NEW_EFFECT>(_ffbEngine.CreateNewEffect) },
+                {typeof(CUSTOM_FORCE_DATA_REPORT), new Action<CUSTOM_FORCE_DATA_REPORT>(_ffbEngine.CustomForceData)},
+                {typeof(CUSTOM_FORCE_PARAMETER), new Action<CUSTOM_FORCE_PARAMETER>(_ffbEngine.SetCustomForce) },
+              };
+
+            FfbGetMethods = new Dictionary<Type, Delegate>()
+              {
+                {typeof(PID_BLOCK_LOAD), new Func<PID_BLOCK_LOAD>(_ffbEngine.GetBlockLoad) },
+                {typeof(PID_STATE), new Func<PID_STATE>(_ffbEngine.GetPidState)},
+                {typeof(PID_POOL_REPORT), new Func<PID_POOL_REPORT>(_ffbEngine.GetPidPoolReport) }
+              };
+
+            FfbWriteReportPipe = new Dictionary<int, object>()
             {
-              {1, EFFECT_OPERATION.START},
-              {2 , EFFECT_OPERATION.SOLO},
-              {3 , EFFECT_OPERATION.STOP}
+                { 1, new SetInvoke<SET_EFFECT>(FFbSetMethods[typeof(SET_EFFECT)],  new Func<byte[], SET_EFFECT>(SetEffectMapper) ) },
+                { 2, new SetInvoke<ENVELOPE>(FFbSetMethods[typeof(ENVELOPE)],  new Func<byte[], ENVELOPE>(EnvelopeMapper) ) },
+                { 3, new SetInvoke<CONDITION>(FFbSetMethods[typeof(CONDITION)],  new Func<byte[], CONDITION>(ConditionMapper)) },
+                { 4,  new SetInvoke<PERIOD>( FFbSetMethods[typeof(PERIOD)],  new Func<byte[], PERIOD>(PeriodMapper)) },
+                { 5,  new SetInvoke<CONSTANT>( FFbSetMethods[typeof(CONSTANT)],  new Func<byte[], CONSTANT>(ConstantForceMapper) ) },
+                { 6,  new SetInvoke<RAMP>( FFbSetMethods[typeof(RAMP)],  new Func<byte[], RAMP>(RampMapper) ) },
+                { 10, new SetInvoke<OPERATION>( FFbSetMethods[typeof(OPERATION)],  new Func<byte[], OPERATION>(OperationMapper) ) },
+                { 13, new SetInvoke<DEVICE_GAIN>( FFbSetMethods[typeof(DEVICE_GAIN)],  new Func<byte[], DEVICE_GAIN>(DeviceGainMapper) ) },
+                { 12, new SetInvoke<PID_DEVICE_CONTROL>( FFbSetMethods[typeof(PID_DEVICE_CONTROL)],  new Func<byte[], PID_DEVICE_CONTROL>(PidDeviceControlMapper)) },
+                { 11, new SetInvoke<PID_BLOCK_FREE>(FFbSetMethods[typeof(PID_BLOCK_FREE)],  new Func<byte[], PID_BLOCK_FREE>(BlockFreeMapper) ) },
+                { 7, new SetInvoke<CUSTOM_FORCE_PARAMETER>( FFbSetMethods[typeof(CUSTOM_FORCE_PARAMETER)],  new Func<byte[], CUSTOM_FORCE_PARAMETER>(CustomForceDataMapper)) },
+                { 14,new SetInvoke<CUSTOM_FORCE_DATA_REPORT>(FFbSetMethods[typeof(CUSTOM_FORCE_DATA_REPORT)],  new Func<byte[], CUSTOM_FORCE_DATA_REPORT>(CustomForceMapper)) }
             };
 
-            EffectTypeMapper = new Dictionary<int, EFFECT_TYPE>()
+            FfbSetFeaturePipe = new Dictionary<int, object>()
             {
-                {1,EFFECT_TYPE.CONSTANT},
-                {2,EFFECT_TYPE.RAMP},
-                {3,EFFECT_TYPE.SQUARE},
-                {4,EFFECT_TYPE.SINE},
-                {5,EFFECT_TYPE.TRIANGLE},
-                {6,EFFECT_TYPE.SAWTOOTH_UP},
-                {7,EFFECT_TYPE.SAWTOOTH_DOWN},
-                {8,EFFECT_TYPE.SPRING},
-                {9,EFFECT_TYPE.DAMPER},
-                {10,EFFECT_TYPE.INERTIA},
-                {11,EFFECT_TYPE.FRICTION},
-                {12,EFFECT_TYPE.CUSTOM}
-                };
-
-            FfbWriteReportTypeMapper = new Dictionary<int, SetInvoke>()
-            {
-                { 1, new SetInvoke(_ffbEngine.Set[typeof(SET_EFFECT)], SetEffectMapper ) },
-                { 2, new SetInvoke(_ffbEngine.Set[typeof(ENVELOPE)], EnvelopeMapper ) },
-                { 3, new SetInvoke(_ffbEngine.Set[typeof(CONDITION)], ConditionMapper) },
-                { 4,  new SetInvoke( _ffbEngine.Set[typeof(PERIOD)], PeriodMapper) },
-                { 5,  new SetInvoke( _ffbEngine.Set[typeof(CONSTANT)], ConstantForceMapper ) },
-                { 6,  new SetInvoke( _ffbEngine.Set[typeof(RAMP)], RampMapper ) },
-                { 10, new SetInvoke( _ffbEngine.Set[typeof(OPERATION)], OperationMapper ) },
-                { 13, new SetInvoke( _ffbEngine.Set[typeof(DEVICE_GAIN)], DeviceGainMapper ) },
-                { 12, new SetInvoke( _ffbEngine.Set[typeof(PID_DEVICE_CONTROL)], PidDeviceControlMapper) },
-                { 11, new SetInvoke(_ffbEngine.Set[typeof(PID_BLOCK_FREE)], BlockFreeMapper ) },
-                { 7, new SetInvoke( _ffbEngine.Set[typeof(CUSTOM_FORCE_PARAMETER)], CustomForceDataMapper) },
-                { 14,new SetInvoke(_ffbEngine.Set[typeof(CUSTOM_FORCE_DATA_REPORT)], CustomForceMapper) }
+                { 5, new SetInvoke<CREATE_NEW_EFFECT>(FFbSetMethods[typeof(CREATE_NEW_EFFECT)],  new Func<byte[], CREATE_NEW_EFFECT>(CreateNewEffectMapper)) }
             };
 
-            FfbSetFeatureTypeMapper = new Dictionary<int, SetInvoke>()
+            FfbGetFeaturePipe = new Dictionary<int, object>()
             {
-                { 5, new SetInvoke(_ffbEngine.Set[typeof(CREATE_NEW_EFFECT)], CreateNewEffectMapper)}
+                {6, new GetInvoke<PID_BLOCK_LOAD>(FfbGetMethods[typeof(PID_BLOCK_LOAD)],  new Func<PID_BLOCK_LOAD, byte[]>(PidBlockLoadMapper)) },
+                {7, new GetInvoke<PID_POOL_REPORT>(FfbGetMethods[typeof(PID_POOL_REPORT)],  new Func<PID_POOL_REPORT, byte[]>(PidPoolReportMapper)) }
             };
 
-            FfbGetFeatureTypeMapper = new Dictionary<int, GetInvoke>()
+            FfbReadReportPipe = new Dictionary<int, object>()
             {
-                {6, new GetInvoke(_ffbEngine.Get[typeof(PID_BLOCK_LOAD)], PidBlockLoadMapper) },
-                {7, new GetInvoke(_ffbEngine.Get[typeof(PID_POOL_REPORT)], PidPoolReportMapper) }
-            };
-
-            FfbReadReportTypeMapper = new Dictionary<int, GetInvoke>()
-            {
-                {2, new GetInvoke(_ffbEngine.Get[typeof(PID_STATE)], PidStateMapper) },
+                {2, new GetInvoke<PID_STATE>(FfbGetMethods[typeof(PID_STATE)],  new Func<PID_STATE, byte[]>(PidStateMapper)) },
             };
         }
 
-        private class GetInvoke
+        private class GetInvoke<T>
         {
-            private Func<object, byte[]> _mapper;
-            private Func<object> _ffbFunc;
+            private Func<T, byte[]> _mapper;
+            private Delegate _ffbFunc;
 
-            internal GetInvoke(Func<object> ffbFunc, Func<object, byte[]> mapper)
+            internal GetInvoke(Delegate ffbFunc, Func<T, byte[]> mapper)
             {
                 _mapper = mapper;
                 _ffbFunc = ffbFunc;
@@ -89,41 +90,16 @@ namespace vHidService
 
             internal byte[] Invoke(byte[] buffer)
             {
-                if (_ffbFunc != null)
-                {
-                    return _mapper(_ffbFunc());
-                }
-                else
-                {
-                    return _mapper(null);
-                }
+                return _mapper((T)_ffbFunc.DynamicInvoke());
             }
         }
 
-        public void WriteReport(byte[] buffer)
+        private class SetInvoke<T>
         {
-            SetInvoke invoke = FfbWriteReportTypeMapper[buffer[0]];
-            invoke.Invoke(buffer);
-        }
+            private Func<byte[], T> _mapper;
+            private Delegate _ffbFunc;
 
-        public void SetFeature(byte[] buffer)
-        {
-            SetInvoke invoke = FfbSetFeatureTypeMapper[buffer[0]];
-            invoke.Invoke(buffer);
-        }
-
-        public byte[] GetFeature(byte[] buffer)
-        {
-            GetInvoke invoke = FfbGetFeatureTypeMapper[buffer[0]];
-            return invoke.Invoke(buffer);
-        }
-
-        private class SetInvoke
-        {
-            private Func<byte[], object> _mapper;
-            private Action<object> _ffbFunc;
-
-            internal SetInvoke(Action<object> ffbFunc, Func<byte[], object> mapper)
+            internal SetInvoke(Delegate ffbFunc, Func<byte[], T> mapper)
             {
                 _mapper = mapper;
                 _ffbFunc = ffbFunc;
@@ -131,11 +107,35 @@ namespace vHidService
 
             internal void Invoke(byte[] buffer)
             {
-                _ffbFunc(_mapper(buffer));
+                _ffbFunc.DynamicInvoke(_mapper(buffer));
             }
         }
 
-        private object ConditionMapper(byte[] buffer)
+        public void WriteReport(byte[] buffer)
+        {
+            dynamic invoke = FfbWriteReportPipe[buffer[0]];
+            invoke.Invoke(buffer);
+        }
+
+        public void SetFeature(byte[] buffer)
+        {
+            dynamic invoke = FfbSetFeaturePipe[buffer[0]];
+            invoke.Invoke(buffer);
+        }
+
+        public byte[] GetFeature(byte[] buffer)
+        {
+            dynamic invoke = FfbGetFeaturePipe[buffer[0]];
+            return invoke.Invoke(buffer);
+        }
+
+        public List<double> GetForces(JOYSTICK_INPUT input)
+        {
+            return _ffbEngine.GetForces(input);
+        }
+
+        #region Mappers
+        private CONDITION ConditionMapper(byte[] buffer)
         {
             return new CONDITION
             {
@@ -150,7 +150,7 @@ namespace vHidService
             };
         }
 
-        private object ConstantForceMapper(byte[] buffer)
+        private CONSTANT ConstantForceMapper(byte[] buffer)
         {
             return new CONSTANT
             {
@@ -159,7 +159,7 @@ namespace vHidService
             };
         }
 
-        private object EnvelopeMapper(byte[] buffer)
+        private ENVELOPE EnvelopeMapper(byte[] buffer)
         {
             return new ENVELOPE
             {
@@ -171,7 +171,7 @@ namespace vHidService
             };
         }
 
-        private object OperationMapper(byte[] buffer)
+        private OPERATION OperationMapper(byte[] buffer)
         {
             return new OPERATION
             {
@@ -181,7 +181,7 @@ namespace vHidService
             };
         }
 
-        private object PeriodMapper(byte[] buffer)
+        private PERIOD PeriodMapper(byte[] buffer)
         {
             return new PERIOD
             {
@@ -193,7 +193,7 @@ namespace vHidService
             };
         }
 
-        private object RampMapper(byte[] buffer)
+        private RAMP RampMapper(byte[] buffer)
         {
             return new RAMP
             {
@@ -203,7 +203,7 @@ namespace vHidService
             };
         }
 
-        private object SetEffectMapper(byte[] buffer)
+        private SET_EFFECT SetEffectMapper(byte[] buffer)
         {
             return new SET_EFFECT
             {
@@ -222,7 +222,7 @@ namespace vHidService
             };
         }
 
-        private object BlockFreeMapper(byte[] buffer)
+        private PID_BLOCK_FREE BlockFreeMapper(byte[] buffer)
         {
             return new PID_BLOCK_FREE
             {
@@ -230,7 +230,7 @@ namespace vHidService
             };
         }
 
-        private object PidDeviceControlMapper(byte[] buffer)
+        private PID_DEVICE_CONTROL PidDeviceControlMapper(byte[] buffer)
         {
             return new PID_DEVICE_CONTROL
             {
@@ -238,7 +238,7 @@ namespace vHidService
             };
         }
 
-        private object DeviceGainMapper(byte[] buffer)
+        private DEVICE_GAIN DeviceGainMapper(byte[] buffer)
         {
             return new DEVICE_GAIN
             {
@@ -246,7 +246,7 @@ namespace vHidService
             };
         }
 
-        private object CreateNewEffectMapper(byte[] buffer)
+        private CREATE_NEW_EFFECT CreateNewEffectMapper(byte[] buffer)
         {
             return new CREATE_NEW_EFFECT
             {
@@ -254,9 +254,8 @@ namespace vHidService
             };
         }
 
-        private byte[] PidBlockLoadMapper(object ffbStruct)
+        private byte[] PidBlockLoadMapper(PID_BLOCK_LOAD pidBlockLoad)
         {
-            PID_BLOCK_LOAD pidBlockLoad = (PID_BLOCK_LOAD)ffbStruct;
             byte[] buffer = new byte[5];
 
             buffer[0] = 6;
@@ -268,21 +267,21 @@ namespace vHidService
             return buffer;
         }
 
-        private byte[] PidPoolReportMapper(object ffbStruct)
+        private byte[] PidPoolReportMapper(PID_POOL_REPORT ffbStruct)
         {
-            return (byte[])ffbStruct;
+            return ffbStruct.report;
         }
 
-        private byte[] PidStateMapper(object ffbStruct)
+        private byte[] PidStateMapper(PID_STATE ffbStruct)
         {
             byte[] buffer = new byte[3];
             buffer[0] = 2;
-            buffer[1] = (byte)((PID_STATE)ffbStruct).status;
-            buffer[2] = (byte)((PID_STATE)ffbStruct).effectPlayingAndEffectBlockIndex;
+            buffer[1] = (byte)ffbStruct.status;
+            buffer[2] = (byte)ffbStruct.effectPlayingAndEffectBlockIndex;
             return buffer;
         }
 
-        private object CustomForceMapper(byte[] buffer)
+        private CUSTOM_FORCE_DATA_REPORT CustomForceMapper(byte[] buffer)
         {
             return new CUSTOM_FORCE_DATA_REPORT
             {
@@ -291,7 +290,7 @@ namespace vHidService
             };
         }
 
-        private object CustomForceDataMapper(byte[] buffer)
+        private CUSTOM_FORCE_PARAMETER CustomForceDataMapper(byte[] buffer)
         {
             return new CUSTOM_FORCE_PARAMETER
             {
@@ -303,10 +302,10 @@ namespace vHidService
 
         private class ReportDescriptorProperties : IReportDescriptorProperties
         {
-            public double MAX_GAIN { get; private set; }
-            public double ENVELOPE_MAX { get; private set; }
-            public double DIRECTION_MAX { get; private set; }
-            public double MAX_PHASE { get; private set; }
+            public double MAX_GAIN { get; }
+            public double ENVELOPE_MAX { get; }
+            public double DIRECTION_MAX { get; }
+            public double MAX_PHASE { get; }
             public uint FREE_ALL_EFFECTS { get; }
             public int MAX_LOOP { get; }
             public int DOWNLOAD_FORCE_SAMPLE_AXES { get; }
@@ -349,10 +348,6 @@ namespace vHidService
                 MAXIMUM_SIGNED = 127;
             }
         }
-
-        public List<double> GetForces(JOYSTICK_INPUT input)
-        {
-            return _ffbEngine.GetForces(input);
-        }
     }
+    #endregion
 }
