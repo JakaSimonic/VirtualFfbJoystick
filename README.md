@@ -11,4 +11,4 @@ fedit (http://www.yaldex.com/game-programming/0131020099_ch05lev1sec5.html)
 csFeedback
 FFConst
 
-Highlighst of this project are virtual HID joystick driver, C# implementation of FFB functionality and glue code that holds this two parts together. 
+Highlights of this project are virtual HID joystick driver, C# implementation of FFB functionality and glue code that holds this two parts together. 
